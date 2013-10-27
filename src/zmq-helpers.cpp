@@ -27,6 +27,12 @@ namespace bento
 		return sock->send(m, more ? ZMQ_SNDMORE : 0);
 	}
 
+	bool zmqSignalSend(zmq::socket_t* sock, const std::string& signal, bool more)
+	{
+		return zmqSend(sock, true) &&
+			zmqSend(sock, signal, more);
+	}
+
 	bool zmqRecv(zmq::socket_t* sock, std::string& result)
 	{
 		zmq::message_t m;
@@ -60,7 +66,12 @@ namespace bento
 
 	bool zmqConnect(zmq::socket_t* sock, const std::string& addr, unsigned port, const std::string& proto)
 	{
-		string endpoint = proto + "://" + addr + ":" + boost::lexical_cast<string>(port);
+		return zmqConnect(sock, addr + ":" + boost::lexical_cast<string>(port), proto);
+	}
+
+	bool zmqConnect(zmq::socket_t* sock, const std::string& addr, const std::string& proto)
+	{
+		string endpoint = proto + "://" + addr;
 
 		try
 		{

@@ -10,17 +10,22 @@
 
 #include <map>
 #include <string>
+#include <zmq.hpp>
 
 namespace bento {
 
 class Node
 {
 public:
-	Node();
+	Node(const std::string& name, unsigned port);
 	virtual ~Node();
 
-	// initialize bento messaging system. This function needs to be run by EXACTLY one node
-	void initBento(const std::string& myId, const std::string& myAddr, const std::map<std::string, std::string>& secondaryAddr);
+	void run();
+private:
+	zmq::socket_t m_incomingSock;
+	std::string m_name;
+
+	bool m_running;
 };
 
 } /* namespace bento */

@@ -15,16 +15,12 @@ namespace bento {
 class Context
 {
 public:
-	inline static Context& getInstance()
+	inline static zmq::context_t& getInstance()
 	{
 		static Context instance;
-		return instance;
+		return instance.m_context;
 	}
 
-	inline zmq::context_t& getContext()
-	{
-		return m_context;
-	}
 private:
 	Context(): m_context(1) {}
 	Context(const Context&);
