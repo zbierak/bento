@@ -15,6 +15,7 @@ namespace bento {
  * One thing you need to have in mind that their contents need to be unique.
  */
 const std::string SIGNAL_HELLO = "EHLO";
+const std::string SIGNAL_HELLO_OK = "EHLO OK";
 
 } /* namespace bento */
 

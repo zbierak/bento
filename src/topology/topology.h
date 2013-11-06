@@ -8,8 +8,7 @@
 #ifndef TOPOLOGY_H_
 #define TOPOLOGY_H_
 
-#include <zmq.hpp>
-#include <boost/unordered_map.hpp>
+#include <string>
 
 namespace bento {
 
@@ -18,12 +17,9 @@ public:
 	Topology(const std::string& ownerName);
 	virtual ~Topology();
 
-	// association on incoming connections
-	void addIncoming(const std::string& zmqId, const std::string& name);
-	bool getIncomingName(const std::string& zmqId, std::string& name);
+    inline const std::string& getOwnerName() { return m_ownerName; }
 private:
-	typedef boost::unordered_map<std::string, zmq::socket_t*> SocketMap;
-	SocketMap m_socketMap;
+    std::string m_ownerName;
 };
 
 } /* namespace bento */
