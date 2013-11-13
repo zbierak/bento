@@ -47,6 +47,7 @@ public:
     void run();
 
     bool send(const std::string& target, const std::string& msg);
+    bool send(const std::string& target, const int32_t type, const std::string& msg);
 
 private:
     typedef boost::unordered_map<std::string, zmq::socket_t*> SocketMap;

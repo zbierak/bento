@@ -184,4 +184,26 @@ void Node::run()
 	LOG_DEBUG("Node %s is preparing to terminate", m_topology.getOwnerName().c_str());
 }
 
+bool Node::send(const std::string& target, const std::string& msg)
+{
+	if (m_sender == NULL)
+	{
+		LOG_DEBUG("Sender is not connected yet, cannot send the message");
+		return false;
+	}
+
+	return m_sender->send(target, msg);
+}
+
+bool Node::send(const std::string& target, const int32_t type, const std::string& msg)
+{
+	if (m_sender == NULL)
+	{
+		LOG_DEBUG("Sender is not connected yet, cannot send the message");
+		return false;
+	}
+
+	return m_sender->send(target, type, msg);
+}
+
 } /* namespace bento */

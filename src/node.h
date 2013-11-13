@@ -43,8 +43,10 @@ protected:
     virtual void onConnect() = 0;
     virtual void onMessage(const std::string& msg) = 0;
 
-    Sender* m_sender;
+    bool send(const std::string& target, const std::string& msg);
+    bool send(const std::string& target, const int32_t type, const std::string& msg);
 private:
+    Sender* m_sender;
     Sender* m_senderUnderInit;
 
 	zmq::socket_t m_incomingSock;

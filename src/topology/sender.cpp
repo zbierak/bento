@@ -15,6 +15,7 @@
 #include "../signals.h"
 
 #include <boost/bind.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -107,11 +108,22 @@ void Sender::run()
 
 bool Sender::send(const std::string& target, const std::string& msg)
 {
+	return this->send(target, -1, msg);
+}
+
+bool Sender::send(const std::string& target, const int32_t type, const std::string& msg)
+{
     SocketMap::iterator it = m_socketMap.find(target);
     if (it == m_socketMap.end())
         throw GeneralException("Unable to find target "+target+" in provided topology.");
 
-    return zmqSend(it->second, msg);
+    string sType = boost::lexical_cast<string>(type);
+
+    bool result = true;
+    result = zmqSend(it->second, sType, true) && result;
+    result = zmqSend(it->second, msg, false) && result;
+
+    return result;
 }
 
 } /* namespace bento */
