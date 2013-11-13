@@ -219,13 +219,7 @@ void Node::run()
 
 bool Node::send(const std::string& target, const std::string& msg)
 {
-	if (m_sender == NULL)
-	{
-		LOG_INFO("Sender is not connected yet, cannot send the message");
-		return false;
-	}
-
-	return m_sender->send(target, msg);
+	return this->send(target, -1, msg);
 }
 
 bool Node::send(const std::string& target, const int32_t type, const std::string& msg)
@@ -237,6 +231,25 @@ bool Node::send(const std::string& target, const int32_t type, const std::string
 	}
 
 	return m_sender->send(target, type, msg);
+}
+
+bool Node::pass(const std::string& msg)
+{
+	return this->pass(-1, msg);
+}
+
+bool Node::pass(const int32_t type, const std::string& msg)
+{
+	bool success = true;
+	const Topology::NodeList& neighbours = m_topology.getNeighbours();
+	for (Topology::NodeList::const_iterator it = neighbours.begin(); it != neighbours.end(); ++it)
+	{
+		success = this->send(*it, type, msg);
+		if (!success)
+			break;
+	}
+
+	return success;
 }
 
 } /* namespace bento */

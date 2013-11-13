@@ -47,6 +47,9 @@ protected:
     bool send(const std::string& target, const std::string& msg);
     bool send(const std::string& target, const int32_t type, const std::string& msg);
 
+    bool pass(const std::string& msg);
+    bool pass(const int32_t type, const std::string& msg);
+
     const std::string& getName();
 private:
     Sender* m_sender;

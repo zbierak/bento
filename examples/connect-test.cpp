@@ -26,7 +26,7 @@ public:
     {
     	cout << "Node has connected to all its neighbors, passing hello messages." << endl;
 
-    	send(getName() == "node1" ? "node2" : "node1", "HELLO!");
+    	pass("HELLO!");
     }
 
     void onMessage(const std::string& from, const int32_t type, const std::string& msg)

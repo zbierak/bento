@@ -46,7 +46,6 @@ public:
 
     void run();
 
-    bool send(const std::string& target, const std::string& msg);
     bool send(const std::string& target, const int32_t type, const std::string& msg);
 
 private:
