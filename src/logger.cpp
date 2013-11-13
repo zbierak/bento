@@ -15,17 +15,17 @@ namespace bento {
 
 const char* loggerSanitizeFileName(const char* fileName)
 {
-	string file(fileName);
-	size_t slash = file.find_last_of('/');
-	if (slash == string::npos)
+	int lastPos = -1;
+	int i = 0;
+
+	while (fileName[i] != 0)
 	{
-		return fileName;
+		if (fileName[i] == '/')
+			lastPos = i;
+		i++;
 	}
-	else
-	{
-		file = file.substr(slash+1);
-		return file.c_str();
-	}
+
+	return &fileName[lastPos+1];
 }
 
 }

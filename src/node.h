@@ -19,6 +19,8 @@
 #include "topology/incoming-registry.h"
 #include "topology/sender.h"
 
+#include "gather/gather-registry.h"
+
 #include "zmq-wrappers/zmq-inproc.h"
 
 namespace bento {
@@ -51,9 +53,13 @@ protected:
     bool pass(const int32_t type, const std::string& msg);
 
     const std::string& getName();
+
+    void registerGatherMessage(const int32_t type, unsigned minMessages);
 private:
     Sender* m_sender;
     Sender* m_senderUnderInit;
+
+    GatherRegistry m_gatherRegistry;
 
 	zmq::socket_t m_incomingSock;
     IncomingRegistry m_incomingRegistry;
@@ -69,6 +75,8 @@ private:
 
 	typedef std::vector<boost::tuple<std::string, int32_t, std::string> > MessageBuffer;
 	MessageBuffer m_unhandledMessages;
+
+	void processOnMessage(const std::string& from, const int32_t type, const std::string& msg);
 };
 
 } /* namespace bento */

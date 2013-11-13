@@ -136,7 +136,7 @@ void Node::run()
 				else
 				{
 					// node is fully connected, we can handle it straightway
-					this->onMessage(from, type, msg);
+					processOnMessage(from, type, msg);
 				}
 			}
 			else
@@ -181,7 +181,7 @@ void Node::run()
 				// handle buffered messages
 				for (MessageBuffer::const_iterator it = m_unhandledMessages.begin(); it != m_unhandledMessages.end(); ++it)
 				{
-					this->onMessage(it->get<0>(), it->get<1>(), it->get<2>());
+					processOnMessage(it->get<0>(), it->get<1>(), it->get<2>());
 				}
 
 				m_unhandledMessages.clear();
@@ -250,6 +250,19 @@ bool Node::pass(const int32_t type, const std::string& msg)
 	}
 
 	return success;
+}
+
+void Node::registerGatherMessage(const int32_t type, unsigned minMessages)
+{
+	m_gatherRegistry.registerMessageType(type, minMessages);
+}
+
+void Node::processOnMessage(const std::string& from, const int32_t type, const std::string& msg)
+{
+	// pass onMessage event only when GatherRegistry permits (note that by default it permits when
+	// a message type is not registered)
+	if (m_gatherRegistry.onMessage(from, type, msg))
+		this->onMessage(from, type, msg);
 }
 
 } /* namespace bento */

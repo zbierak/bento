@@ -2,6 +2,8 @@ add_library(bento
 	node.cpp
 	logger.cpp
 	version.cpp
+	gather/gather-message-info.cpp
+	gather/gather-registry.cpp
 	topology/incoming-registry.cpp
 	topology/sender.cpp
 	topology/topology.cpp

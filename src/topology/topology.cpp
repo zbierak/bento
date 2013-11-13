@@ -22,6 +22,7 @@ Topology::Topology(const std::string& ownerName)
     // TODO: this should be read from a file (a custom parser perhaps?)
     m_nodeList.push_back("node1");
     m_nodeList.push_back("node2");
+    m_nodeList.push_back("node3");
 
     // check if owner name is a known node name
     if (std::find(m_nodeList.begin(), m_nodeList.end(), ownerName) == m_nodeList.end())
@@ -36,12 +37,17 @@ Topology::Topology(const std::string& ownerName)
     		m_neighbours.push_back(*it);
     }
 
-    AddressList node1Neighbours, node2Neighbours;
+    AddressList node1Neighbours, node2Neighbours, node3Neighbours;
     node1Neighbours.push_back(make_pair("node2", "localhost:2014"));
+    node1Neighbours.push_back(make_pair("node3", "localhost:2015"));
     node2Neighbours.push_back(make_pair("node1", "localhost:2013"));
+    node2Neighbours.push_back(make_pair("node3", "localhost:2015"));
+    node3Neighbours.push_back(make_pair("node1", "localhost:2013"));
+    node3Neighbours.push_back(make_pair("node2", "localhost:2014"));
 
     m_topology.insert(make_pair("node1", node1Neighbours));
     m_topology.insert(make_pair("node2", node2Neighbours));
+    m_topology.insert(make_pair("node3", node3Neighbours));
 }
 
 Topology::~Topology()
