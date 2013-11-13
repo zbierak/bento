@@ -14,6 +14,8 @@
 
 #include "topology/sender.h"
 
+#include <boost/lexical_cast.hpp>
+
 #include <iostream>
 
 using namespace std;
@@ -63,6 +65,11 @@ void Node::stop()
 	}
 }
 
+const std::string& Node::getName()
+{
+	return m_name;
+}
+
 void Node::connectTopology()
 {
 	// topology can be initialized only once per node
@@ -110,12 +117,27 @@ void Node::run()
 
 			if (!msg.empty())
 			{
-				// normal message
-				cerr << "Received normal message - this is not handled yet" << endl;
+				// normal message contains of message type and message contents
+				string from;
+				int32_t type = boost::lexical_cast<int32_t>(msg);
+				zmqRecv(&m_incomingSock, msg);
 
-				// todo: please bear in mind that when a message is obtained, the node does not
-				// have to be connected yet - therefore we need to buffer these messages until
-				// it is connected
+				if (!m_incomingRegistry.getName(sender, from))
+				{
+					LOG_ERROR("Message sender not found in incoming registry. Some serious conceptual error exists in the course of the library, as this would not have happened otherwise.");
+					continue;
+				}
+
+				if (m_sender == NULL)
+				{
+					// not yet connected, we need to buffer the message
+					m_unhandledMessages.push_back(boost::make_tuple(from, type, msg));
+				}
+				else
+				{
+					// node is fully connected, we can handle it straightway
+					this->onMessage(from, type, msg);
+				}
 			}
 			else
 			{
@@ -153,6 +175,17 @@ void Node::run()
 
 			// notify that the node is ready
 			this->onConnect();
+
+			if (!m_unhandledMessages.empty())
+			{
+				// handle buffered messages
+				for (MessageBuffer::const_iterator it = m_unhandledMessages.begin(); it != m_unhandledMessages.end(); ++it)
+				{
+					this->onMessage(it->get<0>(), it->get<1>(), it->get<2>());
+				}
+
+				m_unhandledMessages.clear();
+			}
 		}
 
 		// info channel
@@ -188,7 +221,7 @@ bool Node::send(const std::string& target, const std::string& msg)
 {
 	if (m_sender == NULL)
 	{
-		LOG_DEBUG("Sender is not connected yet, cannot send the message");
+		LOG_INFO("Sender is not connected yet, cannot send the message");
 		return false;
 	}
 
@@ -199,7 +232,7 @@ bool Node::send(const std::string& target, const int32_t type, const std::string
 {
 	if (m_sender == NULL)
 	{
-		LOG_DEBUG("Sender is not connected yet, cannot send the message");
+		LOG_INFO("Sender is not connected yet, cannot send the message");
 		return false;
 	}
 

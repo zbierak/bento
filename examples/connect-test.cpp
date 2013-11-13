@@ -24,10 +24,15 @@ public:
 
     virtual void onConnect()
     {
-    	cout << "Node has connected to all its neighbors" << endl;
+    	cout << "Node has connected to all its neighbors, passing hello messages." << endl;
+
+    	send(getName() == "node1" ? "node2" : "node1", "HELLO!");
     }
 
-    void onMessage(const std::string& msg) {}
+    void onMessage(const std::string& from, const int32_t type, const std::string& msg)
+    {
+    	cout << "Node " << getName() << " obtained message " << msg << " from " << from << endl;
+    }
 };
 
 int main(int argc, char *argv[])

@@ -65,7 +65,7 @@ void Sender::run()
             {
                 m_socketMap.insert(make_pair(names[i], sock));
                 zmqSignalSend(sock, SIGNAL_HELLO, true);
-                zmqSend(sock, names[i], false);
+                zmqSend(sock, m_topology->getOwnerName(), false);
 
                 string msg;
                 bool success = zmqRecv(sock, msg, MAX_RESPONSE_WAIT);

@@ -13,6 +13,7 @@
 #include <zmq.hpp>
 
 #include <boost/thread.hpp>
+#include <boost/tuple/tuple.hpp>
 
 #include "topology/topology.h"
 #include "topology/incoming-registry.h"
@@ -41,10 +42,12 @@ public:
 	void connectTopology();
 protected:
     virtual void onConnect() = 0;
-    virtual void onMessage(const std::string& msg) = 0;
+    virtual void onMessage(const std::string& from, const int32_t type, const std::string& msg) = 0;
 
     bool send(const std::string& target, const std::string& msg);
     bool send(const std::string& target, const int32_t type, const std::string& msg);
+
+    const std::string& getName();
 private:
     Sender* m_sender;
     Sender* m_senderUnderInit;
@@ -60,6 +63,9 @@ private:
 
 	boost::thread* m_thread;
 	InprocChannelMaster m_infoChannelMaster;
+
+	typedef std::vector<boost::tuple<std::string, int32_t, std::string> > MessageBuffer;
+	MessageBuffer m_unhandledMessages;
 };
 
 } /* namespace bento */
