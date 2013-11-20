@@ -29,7 +29,7 @@ const std::string NODE_INFO_CHANNEL_PREFIX = "INFO_CHANNEL_NODE_";
 const std::string INITIALIZE_TOPOLOGY_MSG = "initialize-topology";
 const std::string TERMINATE_NODE_MSG = "terminate-node";
 
-Node::Node(const std::string& name, unsigned port, const std::string& topologyFileName):
+Node::Node(const std::string& name, const std::string& topologyFileName):
 	m_name(name),
     m_incomingSock(Context::getInstance(), ZMQ_ROUTER),
     m_running(false),
@@ -45,7 +45,7 @@ Node::Node(const std::string& name, unsigned port, const std::string& topologyFi
 		throw TopologyException(error);
 	}
 
-	zmqBind(&m_incomingSock, port);
+	zmqBind(&m_incomingSock, m_topology.getOwnerPort());
 }
 
 Node::~Node()

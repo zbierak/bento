@@ -99,11 +99,12 @@ public:
 
     inline const Topology::TopologyMap& getTopologyMap() const { return m_topology; }
     inline const Topology::NodeList& getNodeList() const { return m_nodes; }
+    inline const Topology::AddressList& getDefaultAddresses() const { return m_defaultAddress; }
 private:
     TopologyGrammar* m_this;
 
     Topology::NodeList m_nodes;
-    boost::unordered_map<string, string> m_defaultAddress;
+    Topology::AddressList m_defaultAddress;
     vector<string> m_awaitingA2A;
     string m_connectWhat;
     string m_connectToWhat;
@@ -283,7 +284,7 @@ bool parseTopologyFile(const std::string& file, Topology& result, std::string& e
 
 	if (success)
 	{
-		result.updateTopologyMap(gram.getNodeList(), gram.getTopologyMap());
+		result.updateTopologyMap(gram.getNodeList(), gram.getTopologyMap(), gram.getDefaultAddresses());
 		return true;
 	}
     else

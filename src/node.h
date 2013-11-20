@@ -28,7 +28,7 @@ namespace bento {
 class Node
 {
 public:
-	Node(const std::string& name, unsigned port, const std::string& topologyFileName);
+	Node(const std::string& name, const std::string& topologyFileName);
 	virtual ~Node();
 
 	// run in the same thread

@@ -22,7 +22,7 @@ int32_t MESSAGE_TYPE_GATHER_SAMPLE = 1;
 class ConnectNode: public bento::Node
 {
 public:
-	ConnectNode(const std::string& name, unsigned port, const std::string& topologyFileName): Node(name, port, topologyFileName)
+	ConnectNode(const std::string& name, const std::string& topologyFileName): Node(name, topologyFileName)
 	{
 		this->registerGatherMessage(MESSAGE_TYPE_GATHER_SAMPLE, 2);
 	}
@@ -49,14 +49,14 @@ int main(int argc, char *argv[])
 	// relative path, assuming the software is build in a subdirectory
 	const string TOPOLOGY_FILE = "../connect-test.top";
 
-	if (argc < 3)
+	if (argc < 2)
 	{
 		cout << "Missing arguments. The application should be called:" << endl;
-		cout << "\tconnect-test <node-name> <port>" << endl;
+		cout << "\tconnect-test <node-name>" << endl;
 		return -1;
 	}
 
-	ConnectNode node(std::string(argv[1]), boost::lexical_cast<unsigned>(argv[2]), TOPOLOGY_FILE);
+	ConnectNode node(std::string(argv[1]), TOPOLOGY_FILE);
 	node.start();
 
 	node.connectTopology();

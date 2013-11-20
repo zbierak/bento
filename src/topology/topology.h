@@ -30,11 +30,17 @@ public:
     inline const NodeList& getNeighbours() { return m_neighbours; }
     const AddressList& getNeighbourAddresses();
 
-    void updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap);
+    inline const std::string& getOwnerHost() const { return m_ownerHost; }
+    inline const unsigned getOwnerPort() const { return m_ownerPort; }
+
+    void updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap, const Topology::AddressList& defaultAddresses);
 
     void debugPrint();
 private:
     std::string m_ownerName;
+
+    std::string m_ownerHost;
+    unsigned m_ownerPort;
 
     NodeList m_nodeList;
     NodeList m_neighbours;

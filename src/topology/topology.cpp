@@ -9,8 +9,11 @@
 
 #include <iostream>
 #include <algorithm>
+#include <string>
 
 #include "../exceptions.h"
+
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -19,6 +22,7 @@ namespace bento {
 Topology::Topology(const std::string& ownerName)
 {
     m_ownerName = ownerName;
+    m_ownerPort = 0;
 }
 
 Topology::~Topology()
@@ -58,7 +62,7 @@ void Topology::debugPrint()
     }
 }
 
-void Topology::updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap)
+void Topology::updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap, const Topology::AddressList& defaultAddresses)
 {
 	m_nodeList = nodeList;
 	m_topology = topologyMap;
@@ -81,6 +85,23 @@ void Topology::updateTopologyMap(const NodeList& nodeList, const TopologyMap& to
 			m_neighbours.push_back(it2->first);
 	    }
 	}
+
+    AddressList::const_iterator defaultIt = defaultAddresses.find(m_ownerName);
+    if (defaultIt == defaultAddresses.end())
+    {
+    	throw TopologyException("No default address for node '" + m_ownerName + "'.");
+    }
+
+    string address = defaultIt->second;
+
+    unsigned delim = address.find_last_of(':');
+    if (delim == string::npos)
+    {
+    	throw TopologyException("Default address should be in a form of <host>:<port> (exception while analyzing "+address+" for "+m_ownerName+")");
+    }
+
+    m_ownerHost = address.substr(0, delim);
+    m_ownerPort = boost::lexical_cast<unsigned>(address.substr(delim+1));
 }
 
 } /* namespace bento */
