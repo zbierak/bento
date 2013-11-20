@@ -44,46 +44,64 @@ void Sender::run()
 {
     // TODO: this should be moved to a settings file
     const int MAX_RESPONSE_WAIT = 1000;
+    const int MAX_RETRY_COUNT = -1;
 
-    const Topology::AddressList& neighbours = m_topology->getNeighbourAddresses();
+    Topology::AddressList notConnected = Topology::AddressList(m_topology->getNeighbourAddresses());
 
-    for (Topology::AddressList::const_iterator it=neighbours.begin(); it!=neighbours.end(); ++it)
+    int retries = 0;
+    while (!notConnected.empty())
     {
-		zmq::socket_t* sock = new zmq::socket_t(Context::getInstance(), ZMQ_DEALER);
-		if (zmqConnect(sock, it->second))
-		{
-			m_socketMap.insert(make_pair(it->first, sock));
-			zmqSignalSend(sock, SIGNAL_HELLO, true);
-			zmqSend(sock, m_topology->getOwnerName(), false);
+    	if (MAX_RETRY_COUNT >= 0 && retries > MAX_RETRY_COUNT)
+    		throw GeneralException("Unable to connect all neighbours (used all "+boost::lexical_cast<string>(MAX_RETRY_COUNT)+" attempt(s)");
 
-			string msg;
-			bool success = zmqRecv(sock, msg, MAX_RESPONSE_WAIT);
+    	for (Topology::AddressList::const_iterator it=notConnected.begin(); it!=notConnected.end(); )
+    	{
+    		zmq::socket_t* sock = new zmq::socket_t(Context::getInstance(), ZMQ_DEALER);
+    		if (zmqConnect(sock, it->second))
+    		{
+    			zmqSignalSend(sock, SIGNAL_HELLO, true);
+    			zmqSend(sock, m_topology->getOwnerName(), false);
 
-			if (success)
-			{
-				if (!msg.empty())
-				{
-					cerr << "Was expecting signal but got a normal message"	<< endl;
-					success = false;
-				} else
-				{
-					zmqRecv(sock, msg);
-					if (msg != SIGNAL_HELLO_OK)
-					{
-						cerr << "Was expecting HELLO_OK signal but got " << msg << endl;
-						success = false;
-					}
-				}
-			}
+    			string msg;
+    			bool success = zmqRecv(sock, msg, MAX_RESPONSE_WAIT);
 
-			if (!success)
-				throw GeneralException("Unable to connect to " + it->first);
+    			if (success)
+    			{
+    				if (!msg.empty())
+    				{
+    					LOG_ERROR("Was expecting signal but got a normal message");
+    					success = false;
+    				}
+    				else
+    				{
+    					zmqRecv(sock, msg);
+    					if (msg != SIGNAL_HELLO_OK)
+    					{
+    						LOG_ERROR("Was expecting HELLO_OK signal but got %s", msg.c_str());
+    						success = false;
+    					}
+    				}
+    			}
 
-		}
-		else
-		{
-			delete sock;
-		}
+    			if (success)
+    			{
+    				m_socketMap[it->first] = sock;
+    				it = notConnected.erase(it);
+    			}
+    			else
+    			{
+    				delete sock;
+    				LOG_ERROR("Unable to connect to: %s", it->first.c_str());
+    				++it;
+    			}
+    		}
+    		else
+    		{
+    			delete sock;
+    		}
+    	}
+
+    	retries++;
     }
 
     LOG_DEBUG("The sender has been initialized.");

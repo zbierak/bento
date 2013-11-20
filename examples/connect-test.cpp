@@ -59,9 +59,6 @@ int main(int argc, char *argv[])
 	ConnectNode node(std::string(argv[1]), boost::lexical_cast<unsigned>(argv[2]), TOPOLOGY_FILE);
 	node.start();
 
-	cout << "Press ENTER when all neighbors have been started." << endl;
-	cin.ignore();
-
 	node.connectTopology();
 
 	cout << "Press ENTER to close application when ready..." << endl;
