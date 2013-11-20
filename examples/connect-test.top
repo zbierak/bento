@@ -1,0 +1,33 @@
+/* 
+ * First all nodes need to be defined along 
+ * with their default addresses. 
+ */
+nodes {
+	node1(localhost:2013),
+	node2(localhost:2014),
+	node3(localhost:2015)
+}
+
+
+/*
+ * Creates an all-to-all link between selected 
+ * nodes using their default addresses.
+ */
+a2a {
+	node1, node2, node3
+}
+
+/*
+ * Creates a connection between a pair of nodes. 
+ * When no address is specified, the default
+ * address is used. 
+ *
+ * Only one connection channel can be established
+ * between a pair of nodes. Note that address used
+ * in CONNECT clause (if specified) always overwrites
+ * the default address used in A2A clause.
+ */
+
+connect node1 to node2;
+connect node2 to node1 on localhost:2013;
+

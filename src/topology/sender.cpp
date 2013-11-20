@@ -47,12 +47,12 @@ void Sender::run()
 
     const Topology::AddressList& neighbours = m_topology->getNeighbourAddresses();
 
-    for (unsigned i=0; i<neighbours.size(); i++)
+    for (Topology::AddressList::const_iterator it=neighbours.begin(); it!=neighbours.end(); ++it)
     {
 		zmq::socket_t* sock = new zmq::socket_t(Context::getInstance(), ZMQ_DEALER);
-		if (zmqConnect(sock, neighbours[i].second))
+		if (zmqConnect(sock, it->second))
 		{
-			m_socketMap.insert(make_pair(neighbours[i].first, sock));
+			m_socketMap.insert(make_pair(it->first, sock));
 			zmqSignalSend(sock, SIGNAL_HELLO, true);
 			zmqSend(sock, m_topology->getOwnerName(), false);
 
@@ -77,7 +77,7 @@ void Sender::run()
 			}
 
 			if (!success)
-				throw GeneralException("Unable to connect to " + neighbours[i].first);
+				throw GeneralException("Unable to connect to " + it->first);
 
 		}
 		else

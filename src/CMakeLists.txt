@@ -5,6 +5,7 @@ add_library(bento
 	gather/gather-message-info.cpp
 	gather/gather-registry.cpp
 	topology/incoming-registry.cpp
+	topology/parser.cpp
 	topology/sender.cpp
 	topology/topology.cpp
 	zmq-wrappers/zmq-helpers.cpp

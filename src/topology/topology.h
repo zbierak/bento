@@ -18,7 +18,8 @@ namespace bento {
 class Topology {
 public:
 	typedef std::vector<std::string> NodeList;
-    typedef std::vector<std::pair<std::string, std::string> > AddressList;
+    typedef boost::unordered_map<std::string, std::string> AddressList;
+    typedef boost::unordered_map<std::string, AddressList> TopologyMap;
 
 	Topology(const std::string& ownerName);
 	virtual ~Topology();
@@ -28,13 +29,16 @@ public:
     inline const NodeList& getNodeList() { return m_nodeList; }
     inline const NodeList& getNeighbours() { return m_neighbours; }
     const AddressList& getNeighbourAddresses();
+
+    void updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap);
+
+    void debugPrint();
 private:
     std::string m_ownerName;
 
     NodeList m_nodeList;
     NodeList m_neighbours;
 
-    typedef boost::unordered_map<std::string, AddressList> TopologyMap;
     TopologyMap m_topology;
 };
 
