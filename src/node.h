@@ -21,6 +21,8 @@
 
 #include "gather/gather-registry.h"
 
+#include "timers/timer-manager.h"
+
 #include "zmq-wrappers/zmq-inproc.h"
 
 namespace bento {
@@ -52,6 +54,9 @@ protected:
     bool pass(const std::string& msg);
     bool pass(const int32_t type, const std::string& msg);
 
+    int setTimeout(unsigned timeout, const TimerEvent::TimeoutCallback& callback);
+    bool cancelTimeout(int timeoutId);
+
     const std::string& getName();
 
     void registerGatherMessage(const int32_t type, unsigned minMessages);
@@ -65,8 +70,9 @@ private:
     IncomingRegistry m_incomingRegistry;
 
     Topology m_topology;
-
 	std::string m_name;
+
+	TimerManager m_timerManager;
 
 	bool m_running;
 

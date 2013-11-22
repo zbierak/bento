@@ -4,6 +4,8 @@ add_library(bento
 	version.cpp
 	gather/gather-message-info.cpp
 	gather/gather-registry.cpp
+	timers/timer-event.cpp
+	timers/timer-manager.cpp
 	topology/incoming-registry.cpp
 	topology/parser.cpp
 	topology/sender.cpp

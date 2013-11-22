@@ -104,9 +104,11 @@ void Node::run()
 
 	LOG_DEBUG("Node entering main loop");
 
+	int timeToNextEvent = -1;
+
 	while (m_running)
 	{
-        zmq::poll(&items[0], POLL_ITEMS_SIZE, -1);
+        zmq::poll(&items[0], POLL_ITEMS_SIZE, timeToNextEvent);
 
         LOG_DEBUG("Node has new messages");
 
@@ -220,6 +222,10 @@ void Node::run()
 			}
 
 		}
+
+		// process timers (if any) and estimate time to the next one
+		timeToNextEvent = m_timerManager.processReady();
+
 	}
 
 	LOG_DEBUG("Node %s is preparing to terminate", m_topology.getOwnerName().c_str());
@@ -263,6 +269,16 @@ bool Node::pass(const int32_t type, const std::string& msg)
 void Node::registerGatherMessage(const int32_t type, unsigned minMessages)
 {
 	m_gatherRegistry.registerMessageType(type, minMessages);
+}
+
+int Node::setTimeout(unsigned timeout, const TimerEvent::TimeoutCallback& callback)
+{
+	return m_timerManager.setTimeout(timeout, callback);
+}
+
+bool Node::cancelTimeout(int timeoutId)
+{
+	return m_timerManager.cancelTimeout(timeoutId);
 }
 
 void Node::processOnMessage(const std::string& from, const int32_t type, const std::string& msg)

@@ -41,3 +41,9 @@ add_executable(connect-test
 ) 
 
 target_link_libraries(connect-test bento ${ZEROMQ_LIBRARY} boost_thread boost_system)
+
+add_executable(timers
+	timers.cpp
+) 
+
+target_link_libraries(timers bento ${ZEROMQ_LIBRARY} boost_thread boost_system)
