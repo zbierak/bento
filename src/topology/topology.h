@@ -24,18 +24,18 @@ public:
 	Topology(const std::string& ownerName);
 	virtual ~Topology();
 
-    inline const std::string& getOwnerName() { return m_ownerName; }
+    inline const std::string& getOwnerName() const { return m_ownerName; }
 
-    inline const NodeList& getNodeList() { return m_nodeList; }
-    inline const NodeList& getNeighbours() { return m_neighbours; }
-    const AddressList& getNeighbourAddresses();
+    inline const NodeList& getNodeList() const { return m_nodeList; }
+    inline const NodeList& getNeighbours() const { return m_neighbours; }
+    const AddressList& getNeighbourAddresses() const;
 
     inline const std::string& getOwnerHost() const { return m_ownerHost; }
     inline const unsigned getOwnerPort() const { return m_ownerPort; }
 
     void updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap, const Topology::AddressList& defaultAddresses);
 
-    void debugPrint();
+    void debugPrint() const;
 private:
     std::string m_ownerName;
 

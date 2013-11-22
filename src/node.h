@@ -58,6 +58,7 @@ protected:
     bool cancelTimeout(int timeoutId);
 
     const std::string& getName();
+    inline const Topology& getTopology() const { return m_topology; }
 
     void registerGatherMessage(const int32_t type, unsigned minMessages);
 private:

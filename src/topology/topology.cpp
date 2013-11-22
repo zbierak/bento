@@ -29,13 +29,13 @@ Topology::~Topology()
 {
 }
 
-const Topology::AddressList& Topology::getNeighbourAddresses()
+const Topology::AddressList& Topology::getNeighbourAddresses() const
 {
 	TopologyMap::const_iterator it = m_topology.find(m_ownerName);
 	return it->second;
 }
 
-void Topology::debugPrint()
+void Topology::debugPrint() const
 {
 	cout << "Owner name: " << m_ownerName << endl;
 
