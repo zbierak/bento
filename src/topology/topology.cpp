@@ -6,6 +6,7 @@
  */
 
 #include "topology.h"
+#include "parser.h"
 
 #include <iostream>
 #include <algorithm>
@@ -19,10 +20,16 @@ using namespace std;
 
 namespace bento {
 
-Topology::Topology(const std::string& ownerName)
+Topology::Topology(const std::string& ownerName, const std::string& topologyFileName)
 {
     m_ownerName = ownerName;
     m_ownerPort = 0;
+
+	string error;
+	if (!parseTopologyFile(topologyFileName, *this, error))
+	{
+		throw TopologyException(error);
+	}
 }
 
 Topology::~Topology()
@@ -32,6 +39,14 @@ Topology::~Topology()
 const Topology::AddressList& Topology::getNeighbourAddresses() const
 {
 	TopologyMap::const_iterator it = m_topology.find(m_ownerName);
+	return it->second;
+}
+
+const std::string Topology::getRole() const
+{
+	RoleList::const_iterator it = m_roles.find(m_ownerName);
+	if (it == m_roles.end())
+		return "";
 	return it->second;
 }
 
@@ -62,10 +77,11 @@ void Topology::debugPrint() const
     }
 }
 
-void Topology::updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap, const Topology::AddressList& defaultAddresses)
+void Topology::updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap, const AddressList& defaultAddresses, const RoleList& roles)
 {
 	m_nodeList = nodeList;
 	m_topology = topologyMap;
+	m_roles = roles;
 
     if (std::find(m_nodeList.begin(), m_nodeList.end(), m_ownerName) == m_nodeList.end())
     {

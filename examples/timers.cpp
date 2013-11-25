@@ -29,8 +29,9 @@ class TimerNode: public bento::Node
 private:
 	int respReceived;
 public:
-	TimerNode(const std::string& name, const std::string& topologyFileName): Node(name, topologyFileName)
+	TimerNode(const std::string& name, const std::string& topologyFileName): Node(bento::Topology(name, topologyFileName))
 	{
+		cout << "Node role: " << this->getTopology().getRole() << endl;
 		respReceived = 0;
 		srand(time(NULL));
 	}

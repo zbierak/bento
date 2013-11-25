@@ -69,7 +69,8 @@ public:
 			TopologyDocument = nodes >> *(allToAll | connect);
 			nodes = as_lower_d["nodes"] >> ch_p('{') >> !(nodeElem >> *(ch_p(',') >> nodeElem)) >> ch_p('}');
 			nodeElem = str[boost::bind(&TopologyGrammar::storeNodeName, self.m_this, _1, _2)] >> ch_p('(') >>
-					   str[boost::bind(&TopologyGrammar::storeDefaultAddr, self.m_this, _1, _2)] >> ch_p(')');
+					   str[boost::bind(&TopologyGrammar::storeDefaultAddr, self.m_this, _1, _2)] >> ch_p(')') >>
+					   !(as_lower_d["is"] >> str[boost::bind(&TopologyGrammar::storeRole, self.m_this, _1, _2)]);
 			allToAll = as_lower_d["a2a"] >> ch_p('{') >> !(a2aElem >> *(ch_p(',') >> a2aElem))
 						>> ch_p('}')[boost::bind(&TopologyGrammar::processA2A, self.m_this)];
 			a2aElem = str[boost::bind(&TopologyGrammar::storeA2A, self.m_this, _1, _2)];
@@ -100,11 +101,13 @@ public:
     inline const Topology::TopologyMap& getTopologyMap() const { return m_topology; }
     inline const Topology::NodeList& getNodeList() const { return m_nodes; }
     inline const Topology::AddressList& getDefaultAddresses() const { return m_defaultAddress; }
+    inline const Topology::RoleList& getRoles() const { return m_roles; }
 private:
     TopologyGrammar* m_this;
 
     Topology::NodeList m_nodes;
     Topology::AddressList m_defaultAddress;
+    Topology::RoleList m_roles;
     vector<string> m_awaitingA2A;
     string m_connectWhat;
     string m_connectToWhat;
@@ -132,6 +135,14 @@ private:
     	string addr(str, end);
     	m_defaultAddress.insert(make_pair(m_nodes[m_nodes.size()-1], addr));
     }
+
+    void storeRole(char const* str, char const* end)
+        {
+        	if (m_error) return;
+
+        	string role(str, end);
+        	m_roles.insert(make_pair(m_nodes[m_nodes.size()-1], role));
+        }
 
     // a2a section
     void storeA2A(char const* str, char const* end)
@@ -284,7 +295,7 @@ bool parseTopologyFile(const std::string& file, Topology& result, std::string& e
 
 	if (success)
 	{
-		result.updateTopologyMap(gram.getNodeList(), gram.getTopologyMap(), gram.getDefaultAddresses());
+		result.updateTopologyMap(gram.getNodeList(), gram.getTopologyMap(), gram.getDefaultAddresses(), gram.getRoles());
 		return true;
 	}
     else

@@ -19,9 +19,10 @@ class Topology {
 public:
 	typedef std::vector<std::string> NodeList;
     typedef boost::unordered_map<std::string, std::string> AddressList;
+    typedef boost::unordered_map<std::string, std::string> RoleList;
     typedef boost::unordered_map<std::string, AddressList> TopologyMap;
 
-	Topology(const std::string& ownerName);
+	Topology(const std::string& ownerName, const std::string& topologyFileName);
 	virtual ~Topology();
 
     inline const std::string& getOwnerName() const { return m_ownerName; }
@@ -33,7 +34,10 @@ public:
     inline const std::string& getOwnerHost() const { return m_ownerHost; }
     inline const unsigned getOwnerPort() const { return m_ownerPort; }
 
-    void updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap, const Topology::AddressList& defaultAddresses);
+    const std::string getRole() const;
+
+    void updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap,
+    		const AddressList& defaultAddresses, const RoleList& roles);
 
     void debugPrint() const;
 private:
@@ -44,6 +48,8 @@ private:
 
     NodeList m_nodeList;
     NodeList m_neighbours;
+
+    RoleList m_roles;
 
     TopologyMap m_topology;
 };

@@ -1,10 +1,11 @@
 /* 
  * First all nodes need to be defined along 
- * with their default addresses. 
+ * with their default addresses. BTW, look, 
+ * now nodes can take different roles!
  */
 nodes {
-	node1(localhost:2013),
-	node2(localhost:2014)
+	node1(localhost:2013) is SORTER,
+	node2(localhost:2014) is SORTER
 }
 
 

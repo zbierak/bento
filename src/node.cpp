@@ -14,7 +14,6 @@
 #include "zmq-wrappers/zmq-helpers.h"
 
 #include "topology/sender.h"
-#include "topology/parser.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -29,21 +28,16 @@ const std::string NODE_INFO_CHANNEL_PREFIX = "INFO_CHANNEL_NODE_";
 const std::string INITIALIZE_TOPOLOGY_MSG = "initialize-topology";
 const std::string TERMINATE_NODE_MSG = "terminate-node";
 
-Node::Node(const std::string& name, const std::string& topologyFileName):
-	m_name(name),
+Node::Node(const Topology& topology):
+	m_topology(topology),
+	m_name(topology.getOwnerName()),
     m_incomingSock(Context::getInstance(), ZMQ_ROUTER),
     m_running(false),
-    m_topology(name),
     m_sender(NULL),
     m_senderUnderInit(NULL),
     m_thread(NULL),
-    m_infoChannelMaster(NODE_INFO_CHANNEL_PREFIX+name)
+    m_infoChannelMaster(NODE_INFO_CHANNEL_PREFIX+topology.getOwnerName())
 {
-	string error;
-	if (!parseTopologyFile(topologyFileName, m_topology, error))
-	{
-		throw TopologyException(error);
-	}
 
 	zmqBind(&m_incomingSock, m_topology.getOwnerPort());
 }

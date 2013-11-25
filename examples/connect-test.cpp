@@ -22,7 +22,7 @@ int32_t MESSAGE_TYPE_GATHER_SAMPLE = 1;
 class ConnectNode: public bento::Node
 {
 public:
-	ConnectNode(const std::string& name, const std::string& topologyFileName): Node(name, topologyFileName)
+	ConnectNode(const std::string& name, const std::string& topologyFileName): Node(bento::Topology(name, topologyFileName))
 	{
 		this->registerGatherMessage(MESSAGE_TYPE_GATHER_SAMPLE, 2);
 	}

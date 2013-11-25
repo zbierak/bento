@@ -30,7 +30,7 @@ namespace bento {
 class Node
 {
 public:
-	Node(const std::string& name, const std::string& topologyFileName);
+	Node(const Topology& topology);
 	virtual ~Node();
 
 	// run in the same thread
