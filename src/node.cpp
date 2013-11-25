@@ -336,6 +336,25 @@ bool Node::pass(const int32_t type, const std::string& msg)
 	return success;
 }
 
+bool Node::passInGroup(const std::string& msg)
+{
+	return this->passInGroup(-1, msg);
+}
+
+bool Node::passInGroup(const int32_t type, const std::string& msg)
+{
+	bool success = true;
+	const Topology::NodeList& neighbours = m_topology.getSameGroupNeighbours();
+	for (Topology::NodeList::const_iterator it = neighbours.begin(); it != neighbours.end(); ++it)
+	{
+		success = this->send(*it, type, msg);
+		if (!success)
+			break;
+	}
+
+	return success;
+}
+
 void Node::registerGatherMessage(const int32_t type, unsigned minMessages)
 {
 	m_gatherRegistry.registerMessageType(type, minMessages);

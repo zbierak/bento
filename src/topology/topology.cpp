@@ -37,6 +37,14 @@ Topology::Topology(const std::string& ownerName, const std::string& topologyFile
 		if (it->second.find(m_ownerName) != it->second.end())
 			m_amNeighbourOf.push_back(it->first);
 	}
+
+	// determine which of my neighbors have the same role
+	string myRole = this->getOwnerRole();
+	for (NodeList::const_iterator it = m_neighbours.begin(); it != m_neighbours.end(); ++it)
+	{
+		if (this->getRole(*it) == myRole)
+			m_sameGroupNeighbours.push_back(*it);
+	}
 }
 
 Topology::~Topology()
@@ -49,9 +57,14 @@ const Topology::AddressList& Topology::getNeighbourAddresses() const
 	return it->second;
 }
 
-const std::string Topology::getRole() const
+const std::string Topology::getOwnerRole() const
 {
-	RoleList::const_iterator it = m_roles.find(m_ownerName);
+	return getRole(m_ownerName);
+}
+
+const std::string Topology::getRole(const std::string& node) const
+{
+	RoleList::const_iterator it = m_roles.find(node);
 	if (it == m_roles.end())
 		return "";
 	return it->second;
@@ -127,5 +140,27 @@ void Topology::updateTopologyMap(const NodeList& nodeList, const TopologyMap& to
     m_ownerPort = boost::lexical_cast<unsigned>(address.substr(delim+1));
 }
 
-} /* namespace bento */
 
+// Find out the order number in the group delimited by all neighbors of that
+// node that share the same role. The sequence number is determined by the
+// alphabetical order of the names in such group. Might sound fishy, but is
+// handy sometimes.
+const unsigned Topology::getOwnerOrderNumber() const
+{
+	vector<string> sameGroupNodes(m_sameGroupNeighbours);
+	sameGroupNodes.push_back(m_ownerName);
+
+	std::sort(sameGroupNodes.begin(), sameGroupNodes.end());
+
+	for (unsigned i=0; i<sameGroupNodes.size(); i++)
+	{
+		if (sameGroupNodes[i] == m_ownerName)
+			return i;
+	}
+
+	// will never happen, for the sake of compiler let's add it though
+	return 0;
+}
+
+
+} /* namespace bento */

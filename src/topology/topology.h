@@ -29,13 +29,17 @@ public:
 
     inline const NodeList& getNodeList() const { return m_nodeList; }
     inline const NodeList& getNeighbours() const { return m_neighbours; }
+    inline const NodeList& getSameGroupNeighbours() const { return m_sameGroupNeighbours; }
     const AddressList& getNeighbourAddresses() const;
 
     inline const std::string& getOwnerHost() const { return m_ownerHost; }
     inline const unsigned getOwnerPort() const { return m_ownerPort; }
     inline const NodeList& whoseNeighborAmI() const { return m_amNeighbourOf; }
 
-    const std::string getRole() const;
+    const std::string getOwnerRole() const;
+    const std::string getRole(const std::string&) const;
+
+    const unsigned getOwnerOrderNumber() const;
 
     void updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap,
     		const AddressList& defaultAddresses, const RoleList& roles);
@@ -49,6 +53,7 @@ private:
 
     NodeList m_nodeList;
     NodeList m_neighbours;
+    NodeList m_sameGroupNeighbours;
     NodeList m_amNeighbourOf;
 
     RoleList m_roles;

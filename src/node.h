@@ -55,6 +55,9 @@ protected:
     bool pass(const std::string& msg);
     bool pass(const int32_t type, const std::string& msg);
 
+    bool passInGroup(const std::string& msg);
+    bool passInGroup(const int32_t type, const std::string& msg);
+
     int setTimeout(unsigned timeout, const TimerEvent::TimeoutCallback& callback);
     bool cancelTimeout(int timeoutId);
 
