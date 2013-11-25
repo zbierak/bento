@@ -34,7 +34,6 @@ public:
 	SenderInitChannelAtNode(const std::string nodeName);
 };
 
-
 /*
  * Class for sending messages to Node's neighbors, according to selected topology
  */
@@ -48,6 +47,7 @@ public:
 
     bool send(const std::string& target, const int32_t type, const std::string& msg);
 
+    zmq::socket_t* getSocket(const std::string& target);
 private:
     typedef boost::unordered_map<std::string, zmq::socket_t*> SocketMap;
     SocketMap m_socketMap;

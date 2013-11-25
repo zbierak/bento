@@ -14,6 +14,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/unordered_set.hpp>
 
 #include "topology/topology.h"
 #include "topology/incoming-registry.h"
@@ -84,6 +85,10 @@ private:
 	MessageBuffer m_unhandledMessages;
 
 	void processOnMessage(const std::string& from, const int32_t type, const std::string& msg);
+
+	bool m_senderReady;
+	boost::unordered_set<std::string> m_introduceRequested;
+	void checkIfHasConnected();
 };
 
 } /* namespace bento */

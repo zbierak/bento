@@ -126,4 +126,14 @@ bool Sender::send(const std::string& target, const int32_t type, const std::stri
     return result;
 }
 
+zmq::socket_t* Sender::getSocket(const std::string& target)
+{
+	SocketMap::iterator it = m_socketMap.find(target);
+	if (it == m_socketMap.end())
+		throw GeneralException("Unable to find target "+target+" in provided topology.");
+	return it->second;
+}
+
 } /* namespace bento */
+
+

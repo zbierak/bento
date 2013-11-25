@@ -30,6 +30,13 @@ Topology::Topology(const std::string& ownerName, const std::string& topologyFile
 	{
 		throw TopologyException(error);
 	}
+
+	// determine whose neighbor am I
+	for (TopologyMap::const_iterator it = m_topology.begin(); it != m_topology.end(); ++it)
+	{
+		if (it->second.find(m_ownerName) != it->second.end())
+			m_amNeighbourOf.push_back(it->first);
+	}
 }
 
 Topology::~Topology()
@@ -121,3 +128,4 @@ void Topology::updateTopologyMap(const NodeList& nodeList, const TopologyMap& to
 }
 
 } /* namespace bento */
+

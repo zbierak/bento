@@ -36,6 +36,7 @@ Node::Node(const Topology& topology):
     m_sender(NULL),
     m_senderUnderInit(NULL),
     m_thread(NULL),
+    m_senderReady(false),
     m_infoChannelMaster(NODE_INFO_CHANNEL_PREFIX+topology.getOwnerName())
 {
 
@@ -159,6 +160,24 @@ void Node::run()
                     zmqSend(&m_incomingSock, sender, true);
                     zmqSend(&m_incomingSock, true);
                     zmqSend(&m_incomingSock, SIGNAL_HELLO_OK, false);
+
+                    checkIfHasConnected();
+				}
+				else if (msg == SIGNAL_INTRODUCE_YOURSELF)
+				{
+					string respondTo;
+					zmqRecv(&m_incomingSock, respondTo);
+
+					// only introduce yourself when you actually are connected
+					// otherwise it means you are in the middle of connection
+					// process and will, sooner or later, introduce yourself
+					if (m_sender != NULL)
+					{
+						zmq::socket_t* sock = m_sender->getSocket(respondTo);
+						zmqSignalSend(sock, SIGNAL_HELLO, true);
+						zmqSend(sock, m_topology.getOwnerName(), false);
+
+					}
 				}
 				else
 				{
@@ -167,29 +186,17 @@ void Node::run()
 			}
 		}
 
-		// notifyChannel
+		// notifyChannel - has connected to all its neighbors
 		if (items[1].revents & ZMQ_POLLIN)
 		{
 			// remove the message so that it doesn't stall the channel
 			notifyChannel.recv();
 
-			// make the sender usable to the Node
-			m_sender = m_senderUnderInit;
-			m_senderUnderInit = NULL;
+			// store info that has connected to all its neighbors
+			m_senderReady = true;
 
-			// notify that the node is ready
-			this->onConnect();
-
-			if (!m_unhandledMessages.empty())
-			{
-				// handle buffered messages
-				for (MessageBuffer::const_iterator it = m_unhandledMessages.begin(); it != m_unhandledMessages.end(); ++it)
-				{
-					processOnMessage(it->get<0>(), it->get<1>(), it->get<2>());
-				}
-
-				m_unhandledMessages.clear();
-			}
+			// check if also all neighbors connected, if so, notify the derived class
+			checkIfHasConnected();
 		}
 
 		// info channel
@@ -223,6 +230,75 @@ void Node::run()
 	}
 
 	LOG_DEBUG("Node %s is preparing to terminate", m_topology.getOwnerName().c_str());
+}
+
+void Node::checkIfHasConnected()
+{
+	// do not check if ready to connect if already connected
+	if (m_sender != NULL)
+		return;
+
+	/*
+	 * in order to notify the derived class, two conditions must be met:
+	 * 1) node has connected to all its neighbors
+	 * 2) all nodes that have this node as neighbors must be connected to
+	 *    this machine.
+	 */
+
+	// condition one
+	if (!m_senderReady)
+		return;
+
+	// condition two
+	bool everybodyHasConnectedToMe = true;
+	const Topology::NodeList& amNeighbourOf = m_topology.whoseNeighborAmI();
+	for (Topology::NodeList::const_iterator it = amNeighbourOf.begin(); it != amNeighbourOf.end(); ++it)
+	{
+		if (!m_incomingRegistry.containsName(*it))
+		{
+			everybodyHasConnectedToMe = false;
+
+			/*
+			 * This node is not yet connected to us. Normally, we would just wait
+			 * for it to connect (as we would not receive any messages from it
+			 * until it would introduce itself). However, when our node exists and
+			 * attempts to reconnect to an existing topology, the other node would
+			 * not introduce itself, as it is unaware that we have lost our connection.
+			 * So, we need to send it a signal to introduce itself. We only do it once
+			 * for every machine that is our neighbor though.
+			 */
+			if (m_introduceRequested.find(*it) == m_introduceRequested.end())
+			{
+				zmq::socket_t* theSocket = m_senderUnderInit->getSocket(*it);
+				zmqSignalSend(theSocket, SIGNAL_INTRODUCE_YOURSELF, true);
+				zmqSend(theSocket, m_topology.getOwnerName(), false);
+				m_introduceRequested.insert(*it);
+			}
+		}
+	}
+
+	if (!everybodyHasConnectedToMe)
+		return;
+
+	LOG_DEBUG("All channels to and from the node are connected.");
+
+	// conditions have been met, make the sender usable to the Node
+	m_sender = m_senderUnderInit;
+	m_senderUnderInit = NULL;
+
+	// notify that the node is ready
+	this->onConnect();
+
+	if (!m_unhandledMessages.empty())
+	{
+		// handle buffered messages
+		for (MessageBuffer::const_iterator it = m_unhandledMessages.begin(); it != m_unhandledMessages.end(); ++it)
+		{
+			processOnMessage(it->get<0>(), it->get<1>(), it->get<2>());
+		}
+
+		m_unhandledMessages.clear();
+	}
 }
 
 bool Node::send(const std::string& target, const std::string& msg)

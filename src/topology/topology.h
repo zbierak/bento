@@ -33,6 +33,7 @@ public:
 
     inline const std::string& getOwnerHost() const { return m_ownerHost; }
     inline const unsigned getOwnerPort() const { return m_ownerPort; }
+    inline const NodeList& whoseNeighborAmI() const { return m_amNeighbourOf; }
 
     const std::string getRole() const;
 
@@ -48,6 +49,7 @@ private:
 
     NodeList m_nodeList;
     NodeList m_neighbours;
+    NodeList m_amNeighbourOf;
 
     RoleList m_roles;
 

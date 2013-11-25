@@ -20,6 +20,8 @@ public:
 
     void addName(const std::string& zmqId, const std::string& name);
     bool getName(const std::string& zmqId, std::string& name);
+
+    bool containsName(const std::string& name);
 private:
     typedef boost::unordered_map<std::string, std::string> IncomingMap;
     IncomingMap m_incomingMap;

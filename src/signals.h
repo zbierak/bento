@@ -16,6 +16,7 @@ namespace bento {
  */
 const std::string SIGNAL_HELLO = "EHLO";
 const std::string SIGNAL_HELLO_OK = "EHLO OK";
+const std::string SIGNAL_INTRODUCE_YOURSELF = "INTRODUCE_YOURSELF!";
 
 } /* namespace bento */
 

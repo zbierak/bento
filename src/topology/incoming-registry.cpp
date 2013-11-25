@@ -26,4 +26,14 @@ bool IncomingRegistry::getName(const std::string& zmqId, std::string& name)
     return true;
 }
 
+bool IncomingRegistry::containsName(const std::string& name)
+{
+	for (IncomingMap::const_iterator it = m_incomingMap.begin(); it != m_incomingMap.end(); ++it)
+	{
+		if (it->second == name)
+			return true;
+	}
+	return false;
+}
+
 }
