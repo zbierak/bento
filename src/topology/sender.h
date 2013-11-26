@@ -45,7 +45,7 @@ public:
 
     void run();
 
-    bool send(const std::string& target, const int32_t type, const std::string& msg);
+    bool send(const std::string& target, const int32_t type, const std::string& msg, const std::string& signature = "");
 
     zmq::socket_t* getSocket(const std::string& target);
 private:

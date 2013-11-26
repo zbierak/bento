@@ -9,6 +9,8 @@
  * in every element of the array). Upon timeout it sends the results to its
  * neighbors.
  *
+ * Additionally, we use this example to show how message signing works.
+ *
  */
 
 #include <iostream>
@@ -23,6 +25,25 @@
 using namespace std;
 
 const unsigned ARRAY_SIZE = 10;
+
+/*
+ * Simple message "signer" (just to illustrate the general concept).
+ * Every message sent will be passed to signMessage. Every received
+ * message will be passed to verifyMessage. If the latter returns
+ * false, such message is regarded as invalid and discarded.
+ */
+class MessageSigner: public bento::IMessageSigner
+{
+	virtual void signMessage(const bento::Topology& topology, const std::string& to, const int32_t type, const std::string& msg, std::string& signature)
+	{
+		signature = msg;
+	}
+
+	virtual bool verifyMessage(const bento::Topology& topology, const std::string& from, const int32_t type, const std::string& msg, const std::string& signature)
+	{
+		return signature == msg;
+	}
+};
 
 class TimerNode: public bento::Node
 {
@@ -85,7 +106,10 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	MessageSigner signer;
+
 	TimerNode node(std::string(argv[1]), TOPOLOGY_FILE);
+	node.setMessageSigner(&signer);
 	node.start();
 
 	node.connectTopology();

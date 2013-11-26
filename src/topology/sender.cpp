@@ -108,10 +108,9 @@ void Sender::run()
     m_initNotify.send();
 
     // end of thread
-    // TODO: notify Node* using callback function (onSenderReady) and pass pointer to self
 }
 
-bool Sender::send(const std::string& target, const int32_t type, const std::string& msg)
+bool Sender::send(const std::string& target, const int32_t type, const std::string& msg, const std::string& signature)
 {
     SocketMap::iterator it = m_socketMap.find(target);
     if (it == m_socketMap.end())
@@ -121,7 +120,8 @@ bool Sender::send(const std::string& target, const int32_t type, const std::stri
 
     bool result = true;
     result = zmqSend(it->second, sType, true) && result;
-    result = zmqSend(it->second, msg, false) && result;
+    result = zmqSend(it->second, msg, true) && result;
+    result = zmqSend(it->second, signature, false) && result;
 
     return result;
 }

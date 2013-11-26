@@ -37,7 +37,8 @@ Node::Node(const Topology& topology):
     m_senderUnderInit(NULL),
     m_thread(NULL),
     m_senderReady(false),
-    m_infoChannelMaster(NODE_INFO_CHANNEL_PREFIX+topology.getOwnerName())
+    m_infoChannelMaster(NODE_INFO_CHANNEL_PREFIX+topology.getOwnerName()),
+    m_messageSigner(NULL)
 {
 
 	zmqBind(&m_incomingSock, m_topology.getOwnerPort());
@@ -122,10 +123,11 @@ void Node::run()
 
 			if (!msg.empty())
 			{
-				// normal message contains of message type and message contents
-				string from;
+				// normal message contains of message type, message contents and a signature
+				string from, signature;
 				int32_t type = boost::lexical_cast<int32_t>(msg);
 				zmqRecv(&m_incomingSock, msg);
+				zmqRecv(&m_incomingSock, signature);
 
 				if (!m_incomingRegistry.getName(sender, from))
 				{
@@ -136,12 +138,12 @@ void Node::run()
 				if (m_sender == NULL)
 				{
 					// not yet connected, we need to buffer the message
-					m_unhandledMessages.push_back(boost::make_tuple(from, type, msg));
+					m_unhandledMessages.push_back(boost::make_tuple(from, type, msg, signature));
 				}
 				else
 				{
 					// node is fully connected, we can handle it straightway
-					processOnMessage(from, type, msg);
+					processOnMessage(from, type, msg, signature);
 				}
 			}
 			else
@@ -294,7 +296,7 @@ void Node::checkIfHasConnected()
 		// handle buffered messages
 		for (MessageBuffer::const_iterator it = m_unhandledMessages.begin(); it != m_unhandledMessages.end(); ++it)
 		{
-			processOnMessage(it->get<0>(), it->get<1>(), it->get<2>());
+			processOnMessage(it->get<0>(), it->get<1>(), it->get<2>(), it->get<3>());
 		}
 
 		m_unhandledMessages.clear();
@@ -314,7 +316,13 @@ bool Node::send(const std::string& target, const int32_t type, const std::string
 		return false;
 	}
 
-	return m_sender->send(target, type, msg);
+	string signature;
+	if (m_messageSigner != NULL)
+	{
+		m_messageSigner->signMessage(this->getTopology(), target, type, msg, signature);
+	}
+
+	return m_sender->send(target, type, msg, signature);
 }
 
 bool Node::pass(const std::string& msg)
@@ -370,8 +378,17 @@ bool Node::cancelTimeout(int timeoutId)
 	return m_timerManager.cancelTimeout(timeoutId);
 }
 
-void Node::processOnMessage(const std::string& from, const int32_t type, const std::string& msg)
+void Node::processOnMessage(const std::string& from, const int32_t type, const std::string& msg, const std::string& signature)
 {
+	if (m_messageSigner != NULL)
+	{
+		if (!m_messageSigner->verifyMessage(this->getTopology(), from, type, msg, signature))
+		{
+			LOG_INFO("Obtained message from %s of type %d that failed signature verification.", from.c_str(), type);
+			return;
+		}
+	}
+
 	// pass onMessage event only when GatherRegistry permits (note that by default it permits when
 	// a message type is not registered)
 	if (m_gatherRegistry.onMessage(from, type, msg))
