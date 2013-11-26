@@ -46,7 +46,7 @@ int TimerManager::processReady()
 	uint64_t now;
 	while (!m_events.empty())
 	{
-		now = Timer::now();
+		now = Timer::Now::milliseconds();
 		if (m_events.begin()->getDeadline() > now)
 			break;
 

@@ -14,7 +14,7 @@ TimerEvent::TimerEvent(int id, unsigned timeout, const TimeoutCallback& callback
 		m_id(id),
 		m_callback(callback)
 {
-	m_deadline = Timer::now() + timeout;
+	m_deadline = Timer::Now::milliseconds() + timeout;
 }
 
 TimerEvent::~TimerEvent() {}

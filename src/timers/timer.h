@@ -74,22 +74,44 @@ public:
 		#endif
 	}
 
-	// return current time in milliseconds
-	static uint64_t now()
-	{
-		TIME_TYPE timeIsNow;
 
-		#if _WIN32||_WIN64
-			LARGE_INTEGER proc_freq;
-			QueryPerformanceFrequency(&proc_freq);
-			double frequency = ((double)proc_freq.QuadPart) / 1000.0;
-			QueryPerformanceCounter(&timeIsNow);
-			return static_cast<uint64_t>((stopTime.QuadPart - startTime.QuadPart) / frequency);
-		#else
-			gettimeofday(&timeIsNow, NULL);
-			return static_cast<uint64_t>(1000 * timeIsNow.tv_sec + timeIsNow.tv_usec / 1000.0);
-		#endif
-	}
+	struct Now
+	{
+		// return current time in milliseconds
+		static uint64_t milliseconds()
+		{
+			TIME_TYPE timeIsNow;
+
+			#if _WIN32||_WIN64
+				LARGE_INTEGER proc_freq;
+				QueryPerformanceFrequency(&proc_freq);
+				double frequency = ((double)proc_freq.QuadPart) / 1000.0;
+				QueryPerformanceCounter(&timeIsNow);
+				return static_cast<uint64_t>((stopTime.QuadPart - startTime.QuadPart) / frequency);
+			#else
+				gettimeofday(&timeIsNow, NULL);
+				return static_cast<uint64_t>(1000 * timeIsNow.tv_sec + timeIsNow.tv_usec / 1000.0);
+			#endif
+		}
+
+		// return current time in seconds
+		static double seconds()
+		{
+			TIME_TYPE timeIsNow;
+
+			#if _WIN32||_WIN64
+				LARGE_INTEGER proc_freq;
+				QueryPerformanceFrequency(&proc_freq);
+				double frequency = ((double)proc_freq.QuadPart);
+				QueryPerformanceCounter(&timeIsNow);
+				return (stopTime.QuadPart - startTime.QuadPart) / frequency;
+			#else
+				gettimeofday(&timeIsNow, NULL);
+				return timeIsNow.tv_sec + timeIsNow.tv_usec / 1000000.0;
+			#endif
+		}
+	};
+
 };
 
 }
