@@ -363,6 +363,28 @@ bool Node::passInGroup(const int32_t type, const std::string& msg)
 	return success;
 }
 
+bool Node::passInGroup(const std::string& groupName, const std::string& msg)
+{
+	return this->passInGroup(groupName, -1, msg);
+}
+
+bool Node::passInGroup(const std::string& groupName, const int32_t type, const std::string& msg)
+{
+	bool success = true;
+	const Topology::NodeList& neighbours = m_topology.getNeighbours();
+	for (Topology::NodeList::const_iterator it = neighbours.begin(); it != neighbours.end(); ++it)
+	{
+		if (m_topology.getRole(*it) == groupName)
+		{
+			success = this->send(*it, type, msg);
+			if (!success)
+				break;
+		}
+	}
+
+	return success;
+}
+
 void Node::registerGatherMessage(const int32_t type, unsigned minMessages)
 {
 	m_gatherRegistry.registerMessageType(type, minMessages);
@@ -396,3 +418,4 @@ void Node::processOnMessage(const std::string& from, const int32_t type, const s
 }
 
 } /* namespace bento */
+
