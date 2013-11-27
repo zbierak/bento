@@ -390,6 +390,11 @@ void Node::registerGatherMessage(const int32_t type, unsigned minMessages)
 	m_gatherRegistry.registerMessageType(type, minMessages);
 }
 
+void Node::deregisterGatherMessage(const int32_t type)
+{
+	m_gatherRegistry.deregisterMessageType(type);
+}
+
 int Node::setTimeout(unsigned timeout, const TimerEvent::TimeoutCallback& callback)
 {
 	return m_timerManager.setTimeout(timeout, callback);

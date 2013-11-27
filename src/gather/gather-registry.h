@@ -41,6 +41,13 @@ public:
 	void registerMessageType(int32_t type, unsigned minMessages);
 
 	/*
+	 * Deregister a message type from the registry. Do not use (unless 100% sure)
+	 * when some messages have already been received, as it will remove them
+	 * permanently.
+	 */
+	void deregisterMessageType(int32_t type);
+
+	/*
 	 * Called when a new message has arrived. Returns true if exactly required number
 	 * of messages (including this message) has been obtained and it hasn't returned
 	 * true yet for such message earlier on.

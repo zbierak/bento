@@ -70,6 +70,7 @@ protected:
     inline const Topology& getTopology() const { return m_topology; }
 
     void registerGatherMessage(const int32_t type, unsigned minMessages);
+    void deregisterGatherMessage(const int32_t type);
 private:
     Sender* m_sender;
     Sender* m_senderUnderInit;

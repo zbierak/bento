@@ -39,6 +39,17 @@ void GatherRegistry::registerMessageType(int32_t type, unsigned minMessages)
 
 }
 
+void GatherRegistry::deregisterMessageType(int32_t type)
+{
+	AmountMap::iterator rmIt = m_requiredMinimum.find(type);
+	if (rmIt != m_requiredMinimum.end())
+		m_requiredMinimum.erase(rmIt);
+
+	TypesMap::iterator amIt = m_awaitingMessages.find(type);
+	if (amIt != m_awaitingMessages.end())
+		m_awaitingMessages.erase(amIt);
+}
+
 string buildMessageKey(int32_t type, const std::string& msg)
 {
 	return boost::lexical_cast<string>(type) + ":" + msg;
