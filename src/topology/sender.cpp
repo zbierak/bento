@@ -25,7 +25,7 @@ const std::string SENDER_INIT_CHANNEL_NAME = "SENDER_INIT_CHANNEL_FOR_NODE_";
 SenderInitChannelAtSender::SenderInitChannelAtSender(const std::string nodeName): InprocChannelSlave(SENDER_INIT_CHANNEL_NAME+nodeName) {}
 SenderInitChannelAtNode::SenderInitChannelAtNode(const std::string nodeName): InprocChannelMaster(SENDER_INIT_CHANNEL_NAME+nodeName) {}
 
-Sender::Sender(Topology* topology): m_topology(topology), m_initNotify(topology->getOwnerName())
+Sender::Sender(Topology* topology): m_topology(topology), m_initNotify(topology->getOwnerName()), m_initAbort(false)
 {
 	m_thread = new boost::thread(boost::bind(&Sender::run, this));
 }
@@ -36,6 +36,8 @@ Sender::~Sender()
         delete it->second;
     m_socketMap.clear();
 
+    // close the thread asap and free the memory
+    m_initAbort = true;
     m_thread->join();
     delete m_thread;
 }
@@ -45,6 +47,11 @@ void Sender::run()
     // TODO: this should be moved to a settings file
     const int MAX_RESPONSE_WAIT = 1000;
     const int MAX_RETRY_COUNT = -1;
+
+    // we discard the unsent messages straight away when the connection is closed
+    // (they do not stall the channel and do not flood the newly connected machines
+    //  when they take their time and not connect for a while)
+    const int LINGER_TIME = 0;
 
     Topology::AddressList notConnected = Topology::AddressList(m_topology->getNeighbourAddresses());
 
@@ -57,6 +64,8 @@ void Sender::run()
     	for (Topology::AddressList::const_iterator it=notConnected.begin(); it!=notConnected.end(); )
     	{
     		zmq::socket_t* sock = new zmq::socket_t(Context::getInstance(), ZMQ_DEALER);
+
+    		sock->setsockopt(ZMQ_LINGER, &LINGER_TIME, sizeof(LINGER_TIME));
     		if (zmqConnect(sock, it->second))
     		{
     			zmqSignalSend(sock, SIGNAL_HELLO, true);
@@ -85,19 +94,32 @@ void Sender::run()
 
     			if (success)
     			{
+    				if (retries)
+    				    LOG_INFO("Connected to: %s", it->first.c_str());
+
     				m_socketMap[it->first] = sock;
     				it = notConnected.erase(it);
     			}
     			else
     			{
+    				if (!retries)
+    				    LOG_ERROR("Unable to connect to: %s", it->first.c_str());
+
+    				sock->close();
     				delete sock;
-    				LOG_ERROR("Unable to connect to: %s", it->first.c_str());
     				++it;
     			}
     		}
     		else
     		{
     			delete sock;
+    		}
+
+    		if (m_initAbort)
+    		{
+    			// we are closing the application, do not notify, just quit
+    			LOG_DEBUG("We are aborting the sender initiation.");
+    			return;
     		}
     	}
 
@@ -135,5 +157,4 @@ zmq::socket_t* Sender::getSocket(const std::string& target)
 }
 
 } /* namespace bento */
-
 

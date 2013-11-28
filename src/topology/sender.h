@@ -43,12 +43,12 @@ public:
     Sender(Topology* topology);
     virtual ~Sender();
 
-    void run();
-
     bool send(const std::string& target, const int32_t type, const std::string& msg, const std::string& signature = "");
 
     zmq::socket_t* getSocket(const std::string& target);
 private:
+    void run();
+
     typedef boost::unordered_map<std::string, zmq::socket_t*> SocketMap;
     SocketMap m_socketMap;
 
@@ -57,6 +57,8 @@ private:
     boost::thread* m_thread;
 
     SenderInitChannelAtSender m_initNotify;
+
+    bool m_initAbort;
 };
 
 } /* namespace bento */
