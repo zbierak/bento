@@ -40,6 +40,7 @@ public:
     const std::string getRole(const std::string&) const;
 
     const unsigned getOwnerOrderNumber() const;
+    const std::string getNodeWithOrderNumber(unsigned orderNumber) const;
 
     void updateTopologyMap(const NodeList& nodeList, const TopologyMap& topologyMap,
     		const AddressList& defaultAddresses, const RoleList& roles);

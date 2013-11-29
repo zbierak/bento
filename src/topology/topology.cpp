@@ -163,4 +163,24 @@ const unsigned Topology::getOwnerOrderNumber() const
 }
 
 
+// Get the name of the node placed on the given position in the ordering with
+// regard to other neighbors. Similarly to the function above we create a list
+// including the owner name and its neighbors and sort it according to node name.
+// This function returns the node name located on the <orderNumber> position in
+// that list. Proves handy, when you need to designate one of the machines in
+// some way (for instance, the one with the lowest order number), but don't
+// know what is its name.
+const std::string Topology::getNodeWithOrderNumber(unsigned orderNumber) const
+{
+	vector<string> sameGroupNodes(m_sameGroupNeighbours);
+	sameGroupNodes.push_back(m_ownerName);
+	std::sort(sameGroupNodes.begin(), sameGroupNodes.end());
+
+	if (orderNumber >= sameGroupNodes.size())
+		throw GeneralException("Request was issued to extract node with order number "+boost::lexical_cast<string>(orderNumber) +
+				", while the group contains only "+boost::lexical_cast<string>(sameGroupNodes.size())+" nodes.");
+
+	return sameGroupNodes[orderNumber];
+}
+
 } /* namespace bento */
