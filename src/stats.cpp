@@ -112,6 +112,8 @@ void Stats::experimentEnd(StatsResult& result)
 		result.avgValue = avg / elapsed.size();
 	}
 
+	m_duringExperiment = false;
+
 }
 
 } /* namespace bento */
