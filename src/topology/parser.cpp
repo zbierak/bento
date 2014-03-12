@@ -17,7 +17,7 @@
 #endif
 
 #include <boost/spirit/include/classic.hpp>
-#include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/bind.hpp>
 
@@ -268,13 +268,16 @@ bool parseTopologyFile(const std::string& file, Topology& result, std::string& e
 	while (input.good() && !input.eof())
 	{
 		char a = input.get();
-		if (a == '\n' || a == '\r')	a = ' ';
+		if (a == '\r')	a = ' ';
 		if (a != EOF) target += a;
 	}
 
 	input.close();
 
 	commentsErase(target, "/*", "*/");
+	commentsErase(target, "//", "\n");
+
+	boost::replace_all(target, "\n", " ");
 
 	parse_info<> info = parse(target.c_str(), gram, space_p);
 
