@@ -19,7 +19,7 @@ namespace bento {
 #define LOG_LEVEL_ERROR 4
 #define LOG_LEVEL_NONE  5
 
-// set your log level according to your wishes
+// by default, all logging is enabled (you can change it also in the cmake)
 #ifndef LOG_LEVEL
 #define LOG_LEVEL LOG_LEVEL_DEBUG
 #endif

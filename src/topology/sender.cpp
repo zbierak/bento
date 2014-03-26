@@ -103,7 +103,7 @@ void Sender::run()
     			else
     			{
     				if (!retries)
-    				    LOG_ERROR("Unable to connect to: %s", it->first.c_str());
+    				    LOG_INFO("Unable to connect to: %s", it->first.c_str());
 
     				sock->close();
     				delete sock;
