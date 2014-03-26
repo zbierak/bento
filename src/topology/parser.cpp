@@ -36,14 +36,14 @@ void commentsErase(std::string& text, const string& start, const string& stop)
 			return;
 		else
 		{
-			unsigned posEnd = text.find(stop, posStart + 2);
-			if (posEnd == string::npos)
+			unsigned posEnd = text.find(stop, posStart + start.size());
+			if (posEnd == string::npos || posEnd + stop.size() >= text.length())
 			{
 				text = text.substr(0, posStart);
 			}
 			else
 			{
-				text = text.substr(0, posStart).append(text.substr(posEnd + 2));
+				text = text.substr(0, posStart).append(text.substr(posEnd + stop.size()));
 				i = posStart;
 			}
 		}
