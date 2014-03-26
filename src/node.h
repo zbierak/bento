@@ -9,7 +9,9 @@
 #define NODE_H_
 
 #include <map>
+#include <vector>
 #include <string>
+
 #include <zmq.hpp>
 
 #include <boost/thread.hpp>
@@ -25,6 +27,9 @@
 #include "zmq-wrappers/zmq-inproc.h"
 
 #include "message-signer.h"
+#include "message-intercepter.h"
+
+#include "services/topology-status.h"
 
 namespace bento {
 
@@ -47,6 +52,9 @@ public:
 	void connectTopology();
 
 	inline void setMessageSigner(IMessageSigner* messageSigner) { m_messageSigner = messageSigner; }
+
+	void addMessageIntercepter(IMessageIntercepterPtr interceptor);
+
 protected:
     virtual void onConnect() = 0;
     virtual void onMessage(const std::string& from, const int32_t type, const std::string& msg) = 0;
@@ -66,7 +74,7 @@ protected:
     int setTimeout(unsigned timeout, const TimerEvent::TimeoutCallback& callback);
     bool cancelTimeout(int timeoutId);
 
-    const std::string& getName();
+    inline const std::string& getName() const { return m_name; }
     inline const Topology& getTopology() const { return m_topology; }
 
     void registerGatherMessage(const int32_t type, unsigned minMessages);
@@ -92,6 +100,9 @@ private:
 
 	IMessageSigner* m_messageSigner;
 
+	typedef std::vector<IMessageIntercepterPtr > InterceptersVector;
+	InterceptersVector m_intercepters;
+
 	typedef std::vector<boost::tuple<std::string, int32_t, std::string, std::string> > MessageBuffer;
 	MessageBuffer m_unhandledMessages;
 
@@ -100,6 +111,8 @@ private:
 	bool m_senderReady;
 	boost::unordered_set<std::string> m_introduceRequested;
 	void checkIfHasConnected();
+
+	friend class TopologyStatus;
 };
 
 } /* namespace bento */

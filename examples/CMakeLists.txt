@@ -42,6 +42,12 @@ add_executable(connect-test
 
 target_link_libraries(connect-test bento ${ZEROMQ_LIBRARY} boost_thread boost_system)
 
+add_executable(check-topology-status
+	check-topology-status.cpp
+) 
+
+target_link_libraries(check-topology-status bento ${ZEROMQ_LIBRARY} boost_thread boost_system)
+
 add_executable(timers
 	timers.cpp
 ) 

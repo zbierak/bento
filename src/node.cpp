@@ -69,11 +69,6 @@ void Node::stop()
 	}
 }
 
-const std::string& Node::getName()
-{
-	return m_name;
-}
-
 void Node::connectTopology()
 {
 	// topology can be initialized only once per node
@@ -416,11 +411,26 @@ void Node::processOnMessage(const std::string& from, const int32_t type, const s
 		}
 	}
 
+	for (InterceptersVector::iterator it = m_intercepters.begin(); it != m_intercepters.end(); ++it)
+	{
+		if ((*it)->onMessage(from, type, msg))
+		{
+			LOG_DEBUG("The message obtained from %s has been intercepted.", from.c_str());
+			return;
+		}
+	}
+
 	// pass onMessage event only when GatherRegistry permits (note that by default it permits when
 	// a message type is not registered)
 	if (m_gatherRegistry.onMessage(from, type, msg))
 		this->onMessage(from, type, msg);
 }
 
+void Node::addMessageIntercepter(IMessageIntercepterPtr intercepter)
+{
+	m_intercepters.push_back(intercepter);
+}
+
 } /* namespace bento */
+
 

@@ -1,0 +1,37 @@
+/* 
+ * Sample nodes connected in a fancy topology
+ */
+nodes {
+	a1(localhost:2013),
+	a2(localhost:2014),
+	a3(localhost:2015), 
+	b1(localhost:2016),
+	b2(localhost:2017),
+	b3(localhost:2018)
+}
+
+
+/*
+ * Creates an all-to-all link between all a-nodes using their default addresses.
+ */
+a2a {
+	a1, a2, a3
+}
+
+/*
+ * Connects respective a nodes to b nodes 
+ */
+
+a2a {
+	a1, b1
+}
+
+a2a {
+	a2, b2
+}
+
+a2a {
+	a3, b3
+}
+
+
