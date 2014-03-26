@@ -170,10 +170,18 @@ void Node::run()
 					// process and will, sooner or later, introduce yourself
 					if (m_sender != NULL)
 					{
-						zmq::socket_t* sock = m_sender->getSocket(respondTo);
-						zmqSignalSend(sock, SIGNAL_HELLO, true);
-						zmqSend(sock, m_topology.getOwnerName(), false);
+						// however, the link might be only one way (from the node
+						// that has sent the INTRODUCE_YOURSELF signal), so there
+						// is no actual way (and need) to notify it. In such case
+						// discard the signal and perform no additional actions.
 
+						const Topology::NodeList& nodes = m_topology.getNeighbours();
+						if (std::find(nodes.begin(), nodes.end(), respondTo) != nodes.end())
+						{
+							zmq::socket_t* sock = m_sender->getSocket(respondTo);
+							zmqSignalSend(sock, SIGNAL_HELLO, true);
+							zmqSend(sock, m_topology.getOwnerName(), false);
+						}
 					}
 				}
 				else
@@ -266,10 +274,34 @@ void Node::checkIfHasConnected()
 			 */
 			if (m_introduceRequested.find(*it) == m_introduceRequested.end())
 			{
-				zmq::socket_t* theSocket = m_senderUnderInit->getSocket(*it);
-				zmqSignalSend(theSocket, SIGNAL_INTRODUCE_YOURSELF, true);
-				zmqSend(theSocket, m_topology.getOwnerName(), false);
-				m_introduceRequested.insert(*it);
+				/*
+				 * This is a little more complicated with one-way channels, if the
+				 * newly connected node is at the end of a channel from another node.
+				 * Since it has no way to notify the node at the other end of a channel,
+				 * it cannot request that node to introduce itself. Probably, this would
+				 * need to be solved by transmitting the sender name with each message, but
+				 * that would not solve this problem in a situation, when the sender would
+				 * decide not to send any messages for a long time (or ever). Frankly, I'm
+				 * not really sure how this should be handled.
+				 */
+				const Topology::NodeList& nodes = m_topology.getNeighbours();
+				if (std::find(nodes.begin(), nodes.end(), *it) != nodes.end())
+				{
+					zmq::socket_t* theSocket = m_senderUnderInit->getSocket(*it);
+					zmqSignalSend(theSocket, SIGNAL_INTRODUCE_YOURSELF, true);
+					zmqSend(theSocket, m_topology.getOwnerName(), false);
+					m_introduceRequested.insert(*it);
+				}
+				else
+				{
+					#ifndef BENTO_ALLOW_UNIDIRECTIONAL_LINKS
+					throw TopologyException("Seems you are using an unidirectional link that points to this node. "
+							"Please refer to the README file why this is not the best idea. "
+							"However, if you are REALLY sure you know what you are doing,"
+							"you can enable unidirectional links by recompiling the library "
+							"with -DBENTO_ALLOW_UNIDIRECTIONAL_LINKS");
+					#endif
+				}
 			}
 		}
 	}
