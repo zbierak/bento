@@ -8,8 +8,9 @@
 #ifndef STATS_NODE_H_
 #define STATS_NODE_H_
 
-#include <boost/unordered_map.hpp>
+#include <vector>
 #include <map>
+#include <boost/unordered_map.hpp>
 
 namespace bento {
 
