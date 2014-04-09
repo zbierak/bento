@@ -17,6 +17,7 @@ namespace bento {
 struct StatsResult
 {
 	std::string experimentName;
+	double experimentDuration;
 
 	double minValue;
 	double avgValue;
@@ -47,6 +48,7 @@ protected:
 
 	std::string m_experimentName;
 	bool m_duringExperiment;
+	double m_experimentStart;
 
 	// record event ???
 	// event start / event stop

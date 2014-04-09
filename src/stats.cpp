@@ -24,6 +24,7 @@ void StatsResult::printSummary()
 	cout << "* Avg: " << avgValue << endl;
 	cout << "* Med: " << medValue << endl;
 	cout << "* Max: " << maxValue << endl;
+	cout << "Overall experiment duration [s]: " << experimentDuration << endl;
 	cout << endl;
 }
 
@@ -41,7 +42,7 @@ void StatsResult::printEvents()
 	cout << endl;
 }
 
-Stats::Stats() : m_duringExperiment(false) {}
+Stats::Stats() : m_duringExperiment(false), m_experimentStart(-1) {}
 
 Stats::~Stats() {}
 
@@ -70,6 +71,7 @@ void Stats::experimentBegin(const std::string& experimentName)
 	m_eventStop.clear();
 	m_experimentName = experimentName;
 	m_duringExperiment = true;
+	m_experimentStart = Timer::Now::seconds();
 }
 
 void Stats::experimentEnd(StatsResult& result)
@@ -78,6 +80,7 @@ void Stats::experimentEnd(StatsResult& result)
 		return;
 
 	result.experimentName = m_experimentName;
+	result.experimentDuration = Timer::Now::seconds() - m_experimentStart;
 
 	vector<double> elapsed;
 	for (SortedMap::const_iterator startIt = m_eventStart.begin(); startIt != m_eventStart.end(); ++startIt)
