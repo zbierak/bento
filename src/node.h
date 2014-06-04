@@ -29,6 +29,8 @@
 #include "message-signer.h"
 #include "message-intercepter.h"
 
+#include "crypto-thread.h"
+
 #include "services/topology-status.h"
 
 namespace bento {
@@ -51,7 +53,7 @@ public:
 
 	void connectTopology();
 
-	inline void setMessageSigner(IMessageSigner* messageSigner) { m_messageSigner = messageSigner; }
+	void setMessageSigner(IMessageSigner* messageSigner);
 
 	void addMessageIntercepter(IMessageIntercepterPtr interceptor);
 
@@ -99,6 +101,7 @@ private:
 	InprocChannelMaster m_infoChannelMaster;
 
 	IMessageSigner* m_messageSigner;
+	CryptoThread* m_cryptoThread;
 
 	typedef std::vector<IMessageIntercepterPtr > InterceptersVector;
 	InterceptersVector m_intercepters;
@@ -107,6 +110,9 @@ private:
 	MessageBuffer m_unhandledMessages;
 
 	void processOnMessage(const std::string& from, const int32_t type, const std::string& msg, const std::string& signature);
+
+	void onCryptoSign(const std::string& target, const int32_t type, const std::string& msg, const std::string& signature);
+	void onCryptoVerify(const std::string& from, const int32_t type, const std::string& msg, bool success);
 
 	bool m_senderReady;
 	boost::unordered_set<std::string> m_introduceRequested;

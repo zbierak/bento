@@ -38,9 +38,10 @@ Node::Node(const Topology& topology):
     m_thread(NULL),
     m_senderReady(false),
     m_infoChannelMaster(NODE_INFO_CHANNEL_PREFIX+topology.getOwnerName()),
-    m_messageSigner(NULL)
+    m_messageSigner(NULL),
+    m_cryptoThread(NULL)
 {
-
+	m_cryptoThread = new CryptoThread(this->getTopology());
 	zmqBind(&m_incomingSock, m_topology.getOwnerPort());
 }
 
@@ -50,6 +51,12 @@ Node::~Node()
 		delete m_sender;
 	if (m_senderUnderInit != NULL)
 		delete m_senderUnderInit;
+
+	if (m_cryptoThread)
+	{
+		m_cryptoThread->stop();
+		delete m_cryptoThread;
+	}
 }
 
 void Node::start()
@@ -81,15 +88,17 @@ void Node::connectTopology()
 void Node::run()
 {
 	m_running = true;
+	m_cryptoThread->start();
 
 	SenderInitChannelAtNode notifyChannel(m_name);
 	InprocChannelSlave infoChannelSlave(NODE_INFO_CHANNEL_PREFIX+m_name);
 
-	const unsigned POLL_ITEMS_SIZE = 3;
+	const unsigned POLL_ITEMS_SIZE = 4;
 	zmq::pollitem_t items[POLL_ITEMS_SIZE] = {
 			{ m_incomingSock, 0, ZMQ_POLLIN, 0 },
 			{ *notifyChannel.getSocket(), 0, ZMQ_POLLIN, 0 },
-			{ *infoChannelSlave.getSocket(), 0, ZMQ_POLLIN, 0 }
+			{ *infoChannelSlave.getSocket(), 0, ZMQ_POLLIN, 0 },
+			{ *m_cryptoThread->getNodeSocket(), 0, ZMQ_POLLIN, 0}
 	};
 
 
@@ -226,7 +235,43 @@ void Node::run()
 			{
 				LOG_ERROR("Unexpected message %s", msg.c_str());
 			}
+		}
 
+		if (items[3].revents & ZMQ_POLLIN)
+		{
+			string buf;
+
+			zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+			int32_t cryptoType = boost::lexical_cast<int32_t>(buf);
+
+			string target, msg, signature;
+			int32_t type;
+			bool valid;
+
+			switch (cryptoType)
+			{
+			case CMT_SIGN_RESPONSE:
+				// incoming message format: target (string), type (int32_t), msg (string), signature (string)
+				zmqRecv(m_cryptoThread->getNodeSocket(), target);
+				zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+				type = boost::lexical_cast<int32_t>(buf);
+				zmqRecv(m_cryptoThread->getNodeSocket(), msg);
+				zmqRecv(m_cryptoThread->getNodeSocket(), signature);
+
+				onCryptoSign(target, type, msg, signature);
+				break;
+			case CMT_VERIFY_RESPONSE:
+				// outgoing message format: from (string), type (int32_t), msg (string), valid (bool)
+				zmqRecv(m_cryptoThread->getNodeSocket(), target);
+				zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+				type = boost::lexical_cast<int32_t>(buf);
+				zmqRecv(m_cryptoThread->getNodeSocket(), msg);
+				zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+				valid = boost::lexical_cast<bool>(buf);
+
+				onCryptoVerify(target, type, msg, valid);
+				break;
+			}
 		}
 
 		// process timers (if any) and estimate time to the next one
@@ -236,6 +281,35 @@ void Node::run()
 
 	LOG_DEBUG("Node %s is preparing to terminate", m_topology.getOwnerName().c_str());
 }
+
+void Node::onCryptoSign(const std::string& target, const int32_t type, const std::string& msg, const std::string& signature)
+{
+	m_sender->send(target, type, msg, signature);
+}
+
+void Node::onCryptoVerify(const std::string& from, const int32_t type, const std::string& msg, bool success)
+{
+	if (!success)
+	{
+		LOG_INFO("Obtained message from %s of type %d that failed signature verification.", from.c_str(), type);
+		return;
+	}
+
+	for (InterceptersVector::iterator it = m_intercepters.begin(); it != m_intercepters.end(); ++it)
+	{
+		if ((*it)->onMessage(from, type, msg))
+		{
+			LOG_DEBUG("The message obtained from %s has been intercepted.", from.c_str());
+			return;
+		}
+	}
+
+	// pass onMessage event only when GatherRegistry permits (note that by default it permits when
+	// a message type is not registered)
+	if (m_gatherRegistry.onMessage(from, type, msg))
+		this->onMessage(from, type, msg);
+}
+
 
 void Node::checkIfHasConnected()
 {
@@ -339,17 +413,21 @@ bool Node::send(const std::string& target, const int32_t type, const std::string
 {
 	if (m_sender == NULL)
 	{
-		LOG_INFO("Sender is not connected yet, cannot send the message");
+		LOG_WARN("Sender is not connected yet, cannot send the message");
 		return false;
 	}
 
-	string signature;
 	if (m_messageSigner != NULL)
 	{
-		m_messageSigner->signMessage(this->getTopology(), target, type, msg, signature);
+		m_cryptoThread->requestSign(target, type, msg);
+	}
+	else
+	{
+		string signature;
+		this->onCryptoSign(target, type, msg, signature);
 	}
 
-	return m_sender->send(target, type, msg, signature);
+	return true;
 }
 
 bool Node::pass(const std::string& msg)
@@ -436,31 +514,23 @@ void Node::processOnMessage(const std::string& from, const int32_t type, const s
 {
 	if (m_messageSigner != NULL)
 	{
-		if (!m_messageSigner->verifyMessage(this->getTopology(), from, type, msg, signature))
-		{
-			LOG_INFO("Obtained message from %s of type %d that failed signature verification.", from.c_str(), type);
-			return;
-		}
+		m_cryptoThread->requestVerify(from, type, msg, signature);
 	}
-
-	for (InterceptersVector::iterator it = m_intercepters.begin(); it != m_intercepters.end(); ++it)
+	else
 	{
-		if ((*it)->onMessage(from, type, msg))
-		{
-			LOG_DEBUG("The message obtained from %s has been intercepted.", from.c_str());
-			return;
-		}
+		this->onCryptoVerify(from, type, msg, true);
 	}
-
-	// pass onMessage event only when GatherRegistry permits (note that by default it permits when
-	// a message type is not registered)
-	if (m_gatherRegistry.onMessage(from, type, msg))
-		this->onMessage(from, type, msg);
 }
 
 void Node::addMessageIntercepter(IMessageIntercepterPtr intercepter)
 {
 	m_intercepters.push_back(intercepter);
+}
+
+void Node::setMessageSigner(IMessageSigner* messageSigner)
+{
+	m_messageSigner = messageSigner;
+	m_cryptoThread->setMessageSigner(messageSigner);
 }
 
 } /* namespace bento */
