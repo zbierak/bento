@@ -29,7 +29,7 @@ GatherRegistry::~GatherRegistry()
 
 void GatherRegistry::registerMessageType(int32_t type, unsigned minMessages)
 {
-	m_requiredMinimum.insert(make_pair(type, minMessages));
+	m_requiredMinimum[type] = minMessages;
 	m_awaitingMessages.insert(make_pair(type, MessageMap()));
 
 	if (minMessages == 0)
