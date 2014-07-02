@@ -239,38 +239,48 @@ void Node::run()
 
 		if (items[3].revents & ZMQ_POLLIN)
 		{
-			string buf;
+			bool hasMore = true;
 
-			zmqRecv(m_cryptoThread->getNodeSocket(), buf);
-			int32_t cryptoType = boost::lexical_cast<int32_t>(buf);
-
-			string target, msg, signature;
-			int32_t type;
-			bool valid;
-
-			switch (cryptoType)
+			// this message (result of a crypto operation) has somewhat of higher priority and we take all of them
+			// otherwise the buffer might block, since we generate multiple sign/verify request per every other message
+			// processed in this function.
+			while (hasMore)
 			{
-			case CMT_SIGN_RESPONSE:
-				// incoming message format: target (string), type (int32_t), msg (string), signature (string)
-				zmqRecv(m_cryptoThread->getNodeSocket(), target);
-				zmqRecv(m_cryptoThread->getNodeSocket(), buf);
-				type = boost::lexical_cast<int32_t>(buf);
-				zmqRecv(m_cryptoThread->getNodeSocket(), msg);
-				zmqRecv(m_cryptoThread->getNodeSocket(), signature);
+				string buf;
 
-				onCryptoSign(target, type, msg, signature);
-				break;
-			case CMT_VERIFY_RESPONSE:
-				// outgoing message format: from (string), type (int32_t), msg (string), valid (bool)
-				zmqRecv(m_cryptoThread->getNodeSocket(), target);
 				zmqRecv(m_cryptoThread->getNodeSocket(), buf);
-				type = boost::lexical_cast<int32_t>(buf);
-				zmqRecv(m_cryptoThread->getNodeSocket(), msg);
-				zmqRecv(m_cryptoThread->getNodeSocket(), buf);
-				valid = boost::lexical_cast<bool>(buf);
+				int32_t cryptoType = boost::lexical_cast<int32_t>(buf);
 
-				onCryptoVerify(target, type, msg, valid);
-				break;
+				string target, msg, signature;
+				int32_t type;
+				bool valid;
+
+				switch (cryptoType)
+				{
+				case CMT_SIGN_RESPONSE:
+					// incoming message format: target (string), type (int32_t), msg (string), signature (string)
+					zmqRecv(m_cryptoThread->getNodeSocket(), target);
+					zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+					type = boost::lexical_cast<int32_t>(buf);
+					zmqRecv(m_cryptoThread->getNodeSocket(), msg);
+					zmqRecv(m_cryptoThread->getNodeSocket(), signature);
+
+					onCryptoSign(target, type, msg, signature);
+					break;
+				case CMT_VERIFY_RESPONSE:
+					// outgoing message format: from (string), type (int32_t), msg (string), valid (bool)
+					zmqRecv(m_cryptoThread->getNodeSocket(), target);
+					zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+					type = boost::lexical_cast<int32_t>(buf);
+					zmqRecv(m_cryptoThread->getNodeSocket(), msg);
+					zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+					valid = boost::lexical_cast<bool>(buf);
+
+					onCryptoVerify(target, type, msg, valid);
+					break;
+				}
+
+				hasMore = zmqHasMessages(m_cryptoThread->getNodeSocket());
 			}
 		}
 

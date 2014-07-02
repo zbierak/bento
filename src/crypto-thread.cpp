@@ -7,6 +7,8 @@
 
 #include "crypto-thread.h"
 
+#include "zmq-wrappers/zmq-helpers.h"
+
 #include <boost/lexical_cast.hpp>
 
 #include "logger.h"
@@ -21,14 +23,24 @@ CryptoThread::CryptoThread(const Topology& topology):
 		m_running(false),
 		m_thread(NULL),
 		m_signer(NULL),
-		m_topology(topology),
-		m_chanAtCrypto(CRYPTO_THREAD_NAME),
-		m_chanAtNode(CRYPTO_THREAD_NAME)
+		m_topology(topology)
 {
+	m_chanAtCrypto = new zmq::socket_t(Context::getInstance(), ZMQ_PAIR);
+	m_chanAtNode = new zmq::socket_t(Context::getInstance(), ZMQ_PAIR);
+
+	uint32_t hwm = 0;
+	m_chanAtCrypto->setsockopt(ZMQ_SNDHWM, (const void*)&hwm, sizeof(hwm));
+	m_chanAtNode->setsockopt(ZMQ_SNDHWM, (const void*)&hwm, sizeof(hwm));
+
+	m_chanAtCrypto->bind(("inproc://"+CRYPTO_THREAD_NAME).c_str());
+	m_chanAtNode->connect(("inproc://"+CRYPTO_THREAD_NAME).c_str());
+
 }
 
 CryptoThread::~CryptoThread()
 {
+	delete m_chanAtCrypto;
+	delete m_chanAtNode;
 }
 
 void CryptoThread::setMessageSigner(IMessageSigner* signer)
@@ -47,7 +59,7 @@ void CryptoThread::stop()
 	if (m_running)
 	{
 		m_running = false;
-		m_chanAtNode.send(boost::lexical_cast<string, int32_t>(CMT_END_OF_THE_WORLD));
+		zmqSend(m_chanAtNode, boost::lexical_cast<string, int32_t>(CMT_END_OF_THE_WORLD));
 		m_thread->join();
 		delete m_thread;
 	}
@@ -60,7 +72,7 @@ void CryptoThread::run()
 
 	while (m_running)
 	{
-		m_chanAtCrypto.recv(msg);
+		zmqRecv(m_chanAtCrypto, msg);
 		msgType = boost::lexical_cast<int32_t>(msg);
 
 		switch (msgType)
@@ -85,19 +97,19 @@ void CryptoThread::signMessage()
 	string target, typeStr, msg, signature;
 	int32_t type;
 
-	m_chanAtCrypto.recv(target);
-	m_chanAtCrypto.recv(typeStr);
+	zmqRecv(m_chanAtCrypto, target);
+	zmqRecv(m_chanAtCrypto, typeStr);
 	type = boost::lexical_cast<int32_t>(typeStr);
-	m_chanAtCrypto.recv(msg);
+	zmqRecv(m_chanAtCrypto, msg);
 
 	m_signer->signMessage(m_topology, target, type, msg, signature);
 
 	// outgoing message format: target (string), type (int32_t), msg (string), signature (string)
-	m_chanAtCrypto.send(boost::lexical_cast<string, int32_t>(CMT_SIGN_RESPONSE), true);
-	m_chanAtCrypto.send(target, true);
-	m_chanAtCrypto.send(typeStr, true);
-	m_chanAtCrypto.send(msg, true);
-	m_chanAtCrypto.send(signature);
+	zmqSend(m_chanAtCrypto, boost::lexical_cast<string, int32_t>(CMT_SIGN_RESPONSE), true);
+	zmqSend(m_chanAtCrypto, target, true);
+	zmqSend(m_chanAtCrypto, typeStr, true);
+	zmqSend(m_chanAtCrypto, msg, true);
+	zmqSend(m_chanAtCrypto, signature);
 }
 
 void CryptoThread::verifyMessage()
@@ -108,20 +120,20 @@ void CryptoThread::verifyMessage()
 	string from, typeStr, msg, signature;
 	int32_t type;
 
-	m_chanAtCrypto.recv(from);
-	m_chanAtCrypto.recv(typeStr);
+	zmqRecv(m_chanAtCrypto, from);
+	zmqRecv(m_chanAtCrypto, typeStr);
 	type = boost::lexical_cast<int32_t>(typeStr);
-	m_chanAtCrypto.recv(msg);
-	m_chanAtCrypto.recv(signature);
+	zmqRecv(m_chanAtCrypto, msg);
+	zmqRecv(m_chanAtCrypto, signature);
 
 	bool correct = m_signer->verifyMessage(m_topology, from, type, msg, signature);
 
 	// outgoing message format: from (string), type (int32_t), msg (string), valid (bool)
-	m_chanAtCrypto.send(boost::lexical_cast<string, int32_t>(CMT_VERIFY_RESPONSE), true);
-	m_chanAtCrypto.send(from, true);
-	m_chanAtCrypto.send(typeStr, true);
-	m_chanAtCrypto.send(msg, true);
-	m_chanAtCrypto.send(boost::lexical_cast<string, bool>(correct));
+	zmqSend(m_chanAtCrypto, boost::lexical_cast<string, int32_t>(CMT_VERIFY_RESPONSE), true);
+	zmqSend(m_chanAtCrypto, from, true);
+	zmqSend(m_chanAtCrypto, typeStr, true);
+	zmqSend(m_chanAtCrypto, msg, true);
+	zmqSend(m_chanAtCrypto, boost::lexical_cast<string, bool>(correct));
 }
 
 void CryptoThread::requestSign(const std::string& target, const int32_t type, const std::string& msg)
@@ -129,10 +141,10 @@ void CryptoThread::requestSign(const std::string& target, const int32_t type, co
 	LOG_DEBUG("Node has requested signing a message");
 
 	// outgoing message format: target (string), type (int32_t), msg (string)
-	m_chanAtNode.send(boost::lexical_cast<string, int32_t>(CMT_SIGN_REQUEST), true);
-	m_chanAtNode.send(target, true);
-	m_chanAtNode.send(boost::lexical_cast<string>(type), true);
-	m_chanAtNode.send(msg);
+	zmqSend(m_chanAtNode, boost::lexical_cast<string, int32_t>(CMT_SIGN_REQUEST), true);
+	zmqSend(m_chanAtNode, target, true);
+	zmqSend(m_chanAtNode, boost::lexical_cast<string>(type), true);
+	zmqSend(m_chanAtNode, msg);
 }
 
 void CryptoThread::requestVerify(const std::string& from, const int32_t type, const std::string& msg, const std::string& signature)
@@ -140,11 +152,11 @@ void CryptoThread::requestVerify(const std::string& from, const int32_t type, co
 	LOG_DEBUG("Node has requested verifying a signature");
 
 	// incoming message format: from (string), type (int32_t), msg (string), signature (string)
-	m_chanAtNode.send(boost::lexical_cast<string, int32_t>(CMT_VERIFY_REQUEST), true);
-	m_chanAtNode.send(from, true);
-	m_chanAtNode.send(boost::lexical_cast<string>(type), true);
-	m_chanAtNode.send(msg, true);
-	m_chanAtNode.send(signature);
+	zmqSend(m_chanAtNode, boost::lexical_cast<string, int32_t>(CMT_VERIFY_REQUEST), true);
+	zmqSend(m_chanAtNode, from, true);
+	zmqSend(m_chanAtNode, boost::lexical_cast<string>(type), true);
+	zmqSend(m_chanAtNode, msg, true);
+	zmqSend(m_chanAtNode, signature);
 }
 
 } /* namespace bento */

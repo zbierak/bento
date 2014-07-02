@@ -22,6 +22,8 @@ namespace bento
 
     bool zmqRecv(zmq::socket_t* sock, std::string& result, int timeout);
 
+    bool zmqHasMessages(zmq::socket_t* sock);
+
 	bool zmqBind(zmq::socket_t* sock, unsigned port, const std::string& proto = "tcp");
 	bool zmqConnect(zmq::socket_t* sock, const std::string& addr, unsigned port, const std::string& proto = "tcp");
 	bool zmqConnect(zmq::socket_t* sock, const std::string& addr, const std::string& proto = "tcp");

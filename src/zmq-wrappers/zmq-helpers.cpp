@@ -60,6 +60,19 @@ namespace bento
             return false;
     }
 
+    bool zmqHasMessages(zmq::socket_t* sock)
+    {
+        zmq::pollitem_t items[] = {
+                { *sock, 0, ZMQ_POLLIN, 0 }
+        };
+        zmq::poll(&items[0], 1, 0);
+
+        if (items[0].revents & ZMQ_POLLIN)
+            return true;
+        else
+            return false;
+    }
+
 	bool zmqBind(zmq::socket_t* sock, unsigned port, const std::string& proto)
 	{
 		string endpoint = proto + "://*:" + boost::lexical_cast<string>(port);

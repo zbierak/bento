@@ -30,7 +30,7 @@ public:
 	void start();
 	void stop();                                                                    // can be called by the node thread only
 
-	inline zmq::socket_t* getNodeSocket() { return m_chanAtNode.getSocket(); }      // get the communication socket from the end of the node thread
+	inline zmq::socket_t* getNodeSocket() { return m_chanAtNode; }      // get the communication socket from the end of the node thread
 
 	void requestSign(const std::string& target, const int32_t type, const std::string& msg);                                  // can be called by the node thread only
 	void requestVerify(const std::string& from, const int32_t type, const std::string& msg, const std::string& signature);    // can be called by the node thread only
@@ -47,8 +47,8 @@ private:
 
 	const Topology& m_topology;
 
-	InprocChannelMaster m_chanAtCrypto;         // channel at the crypto thread
-	InprocChannelSlave m_chanAtNode;            // channel at the node thread
+	zmq::socket_t* m_chanAtCrypto;          // channel at the crypto thread
+	zmq::socket_t* m_chanAtNode;            // channel at the node thread
 };
 
 } /* namespace bento */
