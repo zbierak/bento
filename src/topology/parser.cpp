@@ -31,12 +31,12 @@ void commentsErase(std::string& text, const string& start, const string& stop)
 	unsigned i = 0;
 	while (i < text.length())
 	{
-		unsigned posStart = text.find(start,i);
+		size_t posStart = text.find(start,i);
 		if (posStart == string::npos)
 			return;
 		else
 		{
-			unsigned posEnd = text.find(stop, posStart + start.size());
+			size_t posEnd = text.find(stop, posStart + start.size());
 			if (posEnd == string::npos || posEnd + stop.size() >= text.length())
 			{
 				text = text.substr(0, posStart);
