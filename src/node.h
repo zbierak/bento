@@ -54,6 +54,7 @@ public:
 	void connectTopology();
 
 	void setMessageSigner(IMessageSigner* messageSigner);
+	void setMessageSigners(const std::vector<IMessageSigner*>& messageSigners);
 
 	void addMessageIntercepter(IMessageIntercepterPtr interceptor);
 
@@ -100,7 +101,7 @@ private:
 	boost::thread* m_thread;
 	InprocChannelMaster m_infoChannelMaster;
 
-	IMessageSigner* m_messageSigner;
+	bool m_hasSigner;
 	CryptoThread* m_cryptoThread;
 
 	typedef std::vector<IMessageIntercepterPtr > InterceptersVector;

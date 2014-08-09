@@ -38,7 +38,7 @@ Node::Node(const Topology& topology):
     m_thread(NULL),
     m_senderReady(false),
     m_infoChannelMaster(NODE_INFO_CHANNEL_PREFIX+topology.getOwnerName()),
-    m_messageSigner(NULL),
+    m_hasSigner(false),
     m_cryptoThread(NULL)
 {
 	m_cryptoThread = new CryptoThread(this->getTopology());
@@ -248,6 +248,10 @@ void Node::run()
 			{
 				string buf;
 
+				// this is a router socket, we discard the identity frame
+				zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+
+				// get the operation type
 				zmqRecv(m_cryptoThread->getNodeSocket(), buf);
 				int32_t cryptoType = boost::lexical_cast<int32_t>(buf);
 
@@ -427,7 +431,7 @@ bool Node::send(const std::string& target, const int32_t type, const std::string
 		return false;
 	}
 
-	if (m_messageSigner != NULL)
+	if (m_hasSigner)
 	{
 		m_cryptoThread->requestSign(target, type, msg);
 	}
@@ -522,7 +526,7 @@ bool Node::cancelTimeout(int timeoutId)
 
 void Node::processOnMessage(const std::string& from, const int32_t type, const std::string& msg, const std::string& signature)
 {
-	if (m_messageSigner != NULL)
+	if (m_hasSigner)
 	{
 		m_cryptoThread->requestVerify(from, type, msg, signature);
 	}
@@ -539,8 +543,25 @@ void Node::addMessageIntercepter(IMessageIntercepterPtr intercepter)
 
 void Node::setMessageSigner(IMessageSigner* messageSigner)
 {
-	m_messageSigner = messageSigner;
-	m_cryptoThread->setMessageSigner(messageSigner);
+	// only single message signer, run one crypto thread
+	vector<IMessageSigner*> signers;
+	signers.push_back(messageSigner);
+
+	m_cryptoThread->setMessageSigners(signers);
+	m_hasSigner = true;
+}
+
+void Node::setMessageSigners(const std::vector<IMessageSigner*>& messageSigners)
+{
+	if (!messageSigners.empty())
+	{
+		m_cryptoThread->setMessageSigners(messageSigners);
+		m_hasSigner = true;
+	}
+	else
+	{
+		LOG_WARN("Attempting to set message signers with an empty list of signers.")
+	}
 }
 
 } /* namespace bento */
