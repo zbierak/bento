@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 	cout << "Press ENTER to close application when ready..." << endl;
 	cin.ignore();
 
-	node.stop();
+	node.shutdown();
 
 	for (unsigned i=0; i<signers.size(); i++)
 		delete signers[i];

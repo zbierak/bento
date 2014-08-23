@@ -59,3 +59,9 @@ add_executable(signatures
 )
 
 target_link_libraries(signatures bento ${ZEROMQ_LIBRARY} boost_thread boost_system)
+
+add_executable(main-thread
+	main-thread.cpp
+) 
+
+target_link_libraries(main-thread bento ${ZEROMQ_LIBRARY} boost_thread boost_system)

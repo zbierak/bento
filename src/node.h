@@ -47,9 +47,8 @@ public:
 	// start as a separate thread
 	void start();
 
-	// stop node (can be called from (almost) any thread). However, it never can be called
-	// from the Node thread (i.e. from onConnect, onMessage etc), or it will hang.
-	void stop();
+	// shutdown the node.
+	void shutdown();
 
 	void setMessageSigner(IMessageSigner* messageSigner);
 	void setMessageSigners(const std::vector<IMessageSigner*>& messageSigners);
@@ -107,6 +106,8 @@ private:
 
 	typedef std::vector<boost::tuple<std::string, int32_t, std::string, std::string> > MessageBuffer;
 	MessageBuffer m_unhandledMessages;
+
+	boost::thread::id m_nodeThreadId;
 
 	void processOnMessage(const std::string& from, const int32_t type, const std::string& msg, const std::string& signature);
 

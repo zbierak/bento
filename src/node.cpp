@@ -63,15 +63,25 @@ void Node::start()
 	m_thread = new boost::thread(boost::bind(&Node::run, this));
 }
 
-void Node::stop()
+void Node::shutdown()
 {
-	m_infoChannelMaster.send(TERMINATE_NODE_MSG);
-
-	if (m_thread != NULL)
+	if (m_nodeThreadId == boost::this_thread::get_id())
 	{
-		m_thread->join();
-		delete m_thread;
-		m_thread = NULL;
+		// called from Node's main thread (onMessage etc.). We can simply set m_running to false
+		// and it all be over before the next main loop iteration
+		m_running = false;
+	}
+	else
+	{
+		// called from other thread, we need to notify Node's main thread.
+		m_infoChannelMaster.send(TERMINATE_NODE_MSG);
+
+		if (m_thread != NULL)
+		{
+			m_thread->join();
+			delete m_thread;
+			m_thread = NULL;
+		}
 	}
 }
 
@@ -79,6 +89,8 @@ void Node::run()
 {
 	m_running = true;
 	m_cryptoThread->start();
+
+	m_nodeThreadId = boost::this_thread::get_id();
 
 	SenderInitChannelAtNode notifyChannel(m_name);
 	InprocChannelSlave infoChannelSlave(NODE_INFO_CHANNEL_PREFIX+m_name);

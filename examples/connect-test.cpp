@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	cout << "Press ENTER to close application when ready..." << endl;
 	cin.ignore();
 
-	node.stop();
+	node.shutdown();
 
 	return 0;
 }

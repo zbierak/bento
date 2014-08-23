@@ -1,0 +1,17 @@
+/* 
+ * First all nodes need to be defined along 
+ * with their default addresses. 
+ */
+nodes {
+	node1(localhost:2013),
+	node2(localhost:2014)
+}
+
+
+/*
+ * Creates an all-to-all link between selected 
+ * nodes using their default addresses.
+ */
+a2a {
+	node1, node2
+}
