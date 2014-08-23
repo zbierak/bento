@@ -102,8 +102,6 @@ int main(int argc, char *argv[])
 	node.setMessageSigners(signers);
 	node.start();
 
-	node.connectTopology();
-
 	cout << "Press ENTER to close application when ready..." << endl;
 	cin.ignore();
 

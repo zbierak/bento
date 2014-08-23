@@ -25,7 +25,6 @@ namespace bento {
 
 const std::string NODE_INFO_CHANNEL_PREFIX = "INFO_CHANNEL_NODE_";
 
-const std::string INITIALIZE_TOPOLOGY_MSG = "initialize-topology";
 const std::string TERMINATE_NODE_MSG = "terminate-node";
 
 Node::Node(const Topology& topology):
@@ -76,15 +75,6 @@ void Node::stop()
 	}
 }
 
-void Node::connectTopology()
-{
-	// topology can be initialized only once per node
-	if (m_sender != NULL || m_senderUnderInit != NULL)
-		return;
-
-	m_infoChannelMaster.send(INITIALIZE_TOPOLOGY_MSG);
-}
-
 void Node::run()
 {
 	m_running = true;
@@ -101,6 +91,8 @@ void Node::run()
 			{ *m_cryptoThread->getNodeSocket(), 0, ZMQ_POLLIN, 0}
 	};
 
+	LOG_DEBUG("Initializing topology");
+	m_senderUnderInit = new Sender(&m_topology);
 
 	LOG_DEBUG("Node entering main loop");
 
@@ -221,12 +213,7 @@ void Node::run()
 
 			LOG_DEBUG("MESSAGE: %s", msg.c_str());
 
-			if (msg == INITIALIZE_TOPOLOGY_MSG)
-			{
-				LOG_DEBUG("Initializing topology");
-				m_senderUnderInit = new Sender(&m_topology);
-			}
-			else if (msg == TERMINATE_NODE_MSG)
+			if (msg == TERMINATE_NODE_MSG)
 			{
 				LOG_DEBUG("Terminating the application");
 				m_running = false;

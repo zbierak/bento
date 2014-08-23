@@ -51,8 +51,6 @@ public:
 	// from the Node thread (i.e. from onConnect, onMessage etc), or it will hang.
 	void stop();
 
-	void connectTopology();
-
 	void setMessageSigner(IMessageSigner* messageSigner);
 	void setMessageSigners(const std::vector<IMessageSigner*>& messageSigners);
 

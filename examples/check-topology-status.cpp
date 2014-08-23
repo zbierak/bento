@@ -85,8 +85,6 @@ int main(int argc, char *argv[])
 	ConnectNode node(std::string(argv[1]), TOPOLOGY_FILE);
 	node.start();
 
-	node.connectTopology();
-
 	cout << "Press ENTER to close application when ready..." << endl;
 	cin.ignore();
 
