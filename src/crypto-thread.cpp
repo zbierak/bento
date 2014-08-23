@@ -227,6 +227,7 @@ void CryptoThread::setMessageSigners(const std::vector<IMessageSigner*>& signers
 
 void CryptoThread::start()
 {
+	// we only start worker threads if some signers have been passed using setMessageSigners()
 	if (m_signers.size() > 0)
 	{
 		m_workers = new SigningThread*[m_signers.size()];
@@ -235,10 +236,6 @@ void CryptoThread::start()
 			m_workers[i] = new SigningThread(m_jobQueue, m_signers[i], m_topology);
 			m_workers[i]->start();
 		}
-	}
-	else
-	{
-		LOG_ERROR("m_signersCount cannot be zero. Missing or invalid call to setMessageSigners()");
 	}
 }
 
