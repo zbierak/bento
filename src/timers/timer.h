@@ -8,6 +8,8 @@
 #ifndef TIMER_H_
 #define TIMER_H_
 
+#include <stdint.h>
+
 namespace bento {
 
 #if _WIN32||_WIN64
