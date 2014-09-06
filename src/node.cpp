@@ -513,6 +513,11 @@ void Node::deregisterGatherMessage(const int32_t type)
 	m_gatherRegistry.deregisterMessageType(type);
 }
 
+void Node::cleanupGatherRegistry()
+{
+	m_gatherRegistry.cleanup();
+}
+
 int Node::setTimeout(unsigned timeout, const TimerEvent::TimeoutCallback& callback)
 {
 	return m_timerManager.setTimeout(timeout, callback);

@@ -67,10 +67,14 @@ bool GatherRegistry::onMessage(const std::string& from, int32_t type, const std:
 	MessageMap& awaiting = typeIt->second;
 	MessageMap::iterator messageIt = awaiting.find(msg);
 
+	string messageKey;
+
 	if (messageIt == awaiting.end())
 	{
+		messageKey = buildMessageKey(type, msg);
+
 		// either such message has not been obtained or it has already been processed
-		if (m_processedMessages.find(buildMessageKey(type, msg)) != m_processedMessages.end())
+		if (m_processedMessages.find(messageKey) != m_processedMessages.end())
 		{
 			// it has already been processed
 			return false;
@@ -86,12 +90,26 @@ bool GatherRegistry::onMessage(const std::string& from, int32_t type, const std:
 	if (received == minimumIt->second)
 	{
 		// this is exactly the number of responses we wanted to obtain. Move message to processed.
-		m_processedMessages.insert(buildMessageKey(type, msg));
+		if (messageKey.empty())
+			messageKey = buildMessageKey(type, msg);
+
+		m_processedMessages.insert(messageKey);
 		awaiting.erase(messageIt);
 		return true;
 	}
 
 	return false;
+}
+
+void GatherRegistry::cleanup()
+{
+	// erase everything
+	for (TypesMap::iterator it = m_awaitingMessages.begin(); it != m_awaitingMessages.end(); ++it)
+	{
+		it->second.clear();
+	}
+
+	m_processedMessages.clear();
 }
 
 } /* namespace bento */

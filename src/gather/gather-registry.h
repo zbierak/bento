@@ -53,6 +53,16 @@ public:
 	 * true yet for such message earlier on.
 	 */
 	bool onMessage(const std::string& from, int32_t type, const std::string& msg);
+
+	/*
+	 * Totally cleanup the contents of message registry. Warning: only call when you
+	 * know what you're doing. This might cause funny side effects, as delivering the
+	 * messages for the second time or not delivering messages at all. This should be
+	 * called ONLY when you are totally sure that all messages that might have been
+	 * obtained by the gather registry until now have been obtained and no identical
+	 * messages from other nodes will be received ever again.
+	 */
+	void cleanup();
 private:
 	typedef boost::unordered_map<int32_t, unsigned> AmountMap;
 	AmountMap m_requiredMinimum;

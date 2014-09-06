@@ -79,6 +79,11 @@ protected:
 
     void registerGatherMessage(const int32_t type, unsigned minMessages);
     void deregisterGatherMessage(const int32_t type);
+
+    /*
+     * Make sure you know all implications when calling this function. Consult gather-registry.h beforehand.
+     */
+    void cleanupGatherRegistry();
 private:
     Sender* m_sender;
     Sender* m_senderUnderInit;
