@@ -13,6 +13,10 @@
 
 #include "../logger.h"
 
+#ifdef USE_HASH_FOR_GATHER
+#include <cryptopp/sha.h>
+#endif
+
 using namespace std;
 
 namespace bento {
@@ -52,7 +56,18 @@ void GatherRegistry::deregisterMessageType(int32_t type)
 
 string buildMessageKey(int32_t type, const std::string& msg)
 {
-	return boost::lexical_cast<string>(type) + ":" + msg;
+	string key = boost::lexical_cast<string>(type) + ":" + msg;
+
+#ifdef USE_HASH_FOR_GATHER
+	if (key.length() <= CryptoPP::SHA256::DIGESTSIZE)
+		return key;
+
+	unsigned char digest[CryptoPP::SHA256::DIGESTSIZE];
+	CryptoPP::SHA256().CalculateDigest(digest, (const unsigned char*) key.c_str(), key.length());
+	return string((char*)digest, CryptoPP::SHA256::DIGESTSIZE);
+#else
+	return key;
+#endif
 }
 
 bool GatherRegistry::onMessage(const std::string& from, int32_t type, const std::string& msg)
