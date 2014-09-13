@@ -52,6 +52,7 @@ public:
 
 	void setMessageSigner(IMessageSigner* messageSigner);
 	void setMessageSigners(const std::vector<IMessageSigner*>& messageSigners);
+	bool getMessageSigners(std::vector<IMessageSigner*>& signers);
 
 	void addMessageIntercepter(IMessageIntercepterPtr interceptor);
 

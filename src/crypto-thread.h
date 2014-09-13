@@ -30,6 +30,7 @@ public:
 	virtual ~CryptoThread();
 
 	void setMessageSigners(const std::vector<IMessageSigner*>& signers);
+	std::vector<IMessageSigner*> getMessageSigners();
 
 	void start();
 	void stop();                                                                    // can be called by the node thread only

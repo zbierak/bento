@@ -568,6 +568,20 @@ void Node::setMessageSigners(const std::vector<IMessageSigner*>& messageSigners)
 	}
 }
 
+bool Node::getMessageSigners(std::vector<IMessageSigner*>& signers)
+{
+	if (m_hasSigner)
+	{
+		signers = m_cryptoThread->getMessageSigners();
+		return true;
+	}
+	else
+	{
+		LOG_WARN("Attempting to get message signers when no such signers have been set.");
+		return false;
+	}
+}
+
 } /* namespace bento */
 
 

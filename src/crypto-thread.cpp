@@ -225,6 +225,11 @@ void CryptoThread::setMessageSigners(const std::vector<IMessageSigner*>& signers
 	m_signers = signers;
 }
 
+std::vector<IMessageSigner*> CryptoThread::getMessageSigners()
+{
+	return m_signers;
+}
+
 void CryptoThread::start()
 {
 	// we only start worker threads if some signers have been passed using setMessageSigners()
