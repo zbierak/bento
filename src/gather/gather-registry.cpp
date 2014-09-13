@@ -103,12 +103,7 @@ bool GatherRegistry::onMessage(const std::string& from, int32_t type, const std:
 
 void GatherRegistry::cleanup()
 {
-	// erase everything
-	for (TypesMap::iterator it = m_awaitingMessages.begin(); it != m_awaitingMessages.end(); ++it)
-	{
-		it->second.clear();
-	}
-
+	// erase processed messages (warning: this might lead to a situation when a message is delivered for a second time)
 	m_processedMessages.clear();
 }
 

@@ -55,12 +55,9 @@ public:
 	bool onMessage(const std::string& from, int32_t type, const std::string& msg);
 
 	/*
-	 * Totally cleanup the contents of message registry. Warning: only call when you
-	 * know what you're doing. This might cause funny side effects, as delivering the
-	 * messages for the second time or not delivering messages at all. This should be
-	 * called ONLY when you are totally sure that all messages that might have been
-	 * obtained by the gather registry until now have been obtained and no identical
-	 * messages from other nodes will be received ever again.
+	 * Cleanup the contents of message registry to save memory. This entirely erases
+	 * the log of delivered messages, which might lead to delivering an already delivered
+	 * message once again. Only use when you understand this and all possible implications.
 	 */
 	void cleanup();
 private:
