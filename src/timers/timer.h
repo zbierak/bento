@@ -92,7 +92,7 @@ public:
 				return static_cast<uint64_t>((stopTime.QuadPart - startTime.QuadPart) / frequency);
 			#else
 				gettimeofday(&timeIsNow, NULL);
-				return static_cast<uint64_t>(1000 * timeIsNow.tv_sec + timeIsNow.tv_usec / 1000.0);
+				return static_cast<uint64_t>(1000 * static_cast<uint64_t>(timeIsNow.tv_sec) + timeIsNow.tv_usec / 1000.0);
 			#endif
 		}
 
