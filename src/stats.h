@@ -35,16 +35,38 @@ public:
 	Stats();
 	virtual ~Stats();
 
+	/**
+	 * Assign current timestamp as a start of event eventId
+	 */
 	void eventStart(int64_t eventId);
+
+	/**
+	 * Assign current timestamp as a stop of event eventId
+	 */
 	void eventStop(int64_t eventId);
 
+	/**
+	 * Create a new event with an already known duration
+	 */
+	void createEvent(double duration);
+
+	/**
+	 * Start new experiment and be ready to record incoming events
+	 */
 	void experimentBegin(const std::string& experimentName = "");
+
+	/**
+	 * End an experiment and return its statistics
+	 */
 	void experimentEnd(StatsResult& result);
 protected:
 	typedef std::map<int64_t, double> SortedMap;
 	typedef boost::unordered_map<int64_t, double> FastAccessMap;
 	SortedMap m_eventStart;
 	FastAccessMap m_eventStop;
+
+	// events duration added with createEvent()
+	std::vector<double> m_additionalEvents;
 
 	std::string m_experimentName;
 	bool m_duringExperiment;

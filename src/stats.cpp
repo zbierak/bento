@@ -69,6 +69,7 @@ void Stats::experimentBegin(const std::string& experimentName)
 
 	m_eventStart.clear();
 	m_eventStop.clear();
+	m_additionalEvents.clear();
 	m_experimentName = experimentName;
 	m_duringExperiment = true;
 	m_experimentStart = Timer::Now::seconds();
@@ -82,7 +83,7 @@ void Stats::experimentEnd(StatsResult& result)
 	result.experimentName = m_experimentName;
 	result.experimentDuration = Timer::Now::seconds() - m_experimentStart;
 
-	vector<double> elapsed;
+	vector<double> elapsed = m_additionalEvents;
 	for (SortedMap::const_iterator startIt = m_eventStart.begin(); startIt != m_eventStart.end(); ++startIt)
 	{
 		FastAccessMap::const_iterator stopIt = m_eventStop.find(startIt->first);
@@ -116,7 +117,11 @@ void Stats::experimentEnd(StatsResult& result)
 	}
 
 	m_duringExperiment = false;
+}
 
+void Stats::createEvent(double duration)
+{
+	m_additionalEvents.push_back(duration);
 }
 
 } /* namespace bento */
