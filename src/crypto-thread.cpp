@@ -170,7 +170,7 @@ void SigningThread::run()
 			if (nextJob.jobType == CryptoJob::CJ_SIGN)
 			{
 				string signature;
-				m_signer->signMessage(m_topology, nextJob.node, nextJob.msgType, nextJob.msg, signature);
+				m_signer->signMessage(&m_topology, nextJob.node, nextJob.msgType, nextJob.msg, signature);
 
 				// outgoing message format: target (string), type (int32_t), msg (string), signature (string)
 				zmqSend(m_returnChan, boost::lexical_cast<string, int32_t>(CMT_SIGN_RESPONSE), true);
@@ -181,7 +181,7 @@ void SigningThread::run()
 			}
 			else if (nextJob.jobType == CryptoJob::CJ_VERIFY)
 			{
-				bool correct = m_signer->verifyMessage(m_topology, nextJob.node, nextJob.msgType, nextJob.msg, nextJob.signature);
+				bool correct = m_signer->verifyMessage(&m_topology, nextJob.node, nextJob.msgType, nextJob.msg, nextJob.signature);
 
 				// outgoing message format: from (string), type (int32_t), msg (string), valid (bool)
 				zmqSend(m_returnChan, boost::lexical_cast<string, int32_t>(CMT_VERIFY_RESPONSE), true);

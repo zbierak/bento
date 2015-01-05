@@ -34,12 +34,12 @@ const unsigned ARRAY_SIZE = 10;
  */
 class MessageSigner: public bento::IMessageSigner
 {
-	virtual void signMessage(const bento::Topology& topology, const std::string& to, const int32_t type, const std::string& msg, std::string& signature)
+	virtual void signMessage(const bento::Topology* topology, const std::string& to, const int32_t type, const std::string& msg, std::string& signature)
 	{
 		signature = msg;
 	}
 
-	virtual bool verifyMessage(const bento::Topology& topology, const std::string& from, const int32_t type, const std::string& msg, const std::string& signature)
+	virtual bool verifyMessage(const bento::Topology* topology, const std::string& from, const int32_t type, const std::string& msg, const std::string& signature)
 	{
 		return signature == msg;
 	}
