@@ -28,6 +28,7 @@ public:
     inline const std::string& getOwnerName() const { return m_ownerName; }
 
     inline const NodeList& getNodeList() const { return m_nodeList; }
+    inline const size_t getNodeCount() const { return m_nodeList.size(); }
     inline const NodeList& getNeighbours() const { return m_neighbours; }
     inline const NodeList& getSameGroupNeighbours() const { return m_sameGroupNeighbours; }
     const AddressList& getNeighbourAddresses() const;
