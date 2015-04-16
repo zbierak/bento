@@ -29,7 +29,7 @@
 #include "message-signer.h"
 #include "message-intercepter.h"
 
-#include "crypto-thread.h"
+#include "cryptography/crypto-manager.h"
 
 #include "services/topology-status.h"
 
@@ -105,7 +105,7 @@ private:
 	InprocChannelMaster m_infoChannelMaster;
 
 	bool m_hasSigner;
-	CryptoThread* m_cryptoThread;
+	CryptoManager* m_cryptoManager;
 
 	typedef std::vector<IMessageIntercepterPtr > InterceptersVector;
 	InterceptersVector m_intercepters;

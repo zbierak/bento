@@ -10,6 +10,8 @@
 #include "signals.h"
 #include "exceptions.h"
 
+#include "cryptography/micro-protocol.h"
+
 #include "zmq-wrappers/zmq-context.h"
 #include "zmq-wrappers/zmq-helpers.h"
 
@@ -38,9 +40,9 @@ Node::Node(const Topology& topology):
     m_senderReady(false),
     m_infoChannelMaster(NODE_INFO_CHANNEL_PREFIX+topology.getOwnerName()),
     m_hasSigner(false),
-    m_cryptoThread(NULL)
+    m_cryptoManager(NULL)
 {
-	m_cryptoThread = new CryptoThread(this->getTopology());
+	m_cryptoManager = new CryptoManager(this->getTopology());
 	zmqBind(&m_incomingSock, m_topology.getOwnerPort());
 }
 
@@ -51,10 +53,10 @@ Node::~Node()
 	if (m_senderUnderInit != NULL)
 		delete m_senderUnderInit;
 
-	if (m_cryptoThread)
+	if (m_cryptoManager)
 	{
-		m_cryptoThread->stop();
-		delete m_cryptoThread;
+		m_cryptoManager->stop();
+		delete m_cryptoManager;
 	}
 }
 
@@ -88,7 +90,7 @@ void Node::shutdown()
 void Node::run()
 {
 	m_running = true;
-	m_cryptoThread->start();
+	m_cryptoManager->start();
 
 	m_nodeThreadId = boost::this_thread::get_id();
 
@@ -100,7 +102,7 @@ void Node::run()
 			{ m_incomingSock, 0, ZMQ_POLLIN, 0 },
 			{ *notifyChannel.getSocket(), 0, ZMQ_POLLIN, 0 },
 			{ *infoChannelSlave.getSocket(), 0, ZMQ_POLLIN, 0 },
-			{ *m_cryptoThread->getNodeSocket(), 0, ZMQ_POLLIN, 0}
+			{ *m_cryptoManager->getNodeSocket(), 0, ZMQ_POLLIN, 0}
 	};
 
 	LOG_DEBUG("Initializing topology");
@@ -248,10 +250,10 @@ void Node::run()
 				string buf;
 
 				// this is a router socket, we discard the identity frame
-				zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+				zmqRecv(m_cryptoManager->getNodeSocket(), buf);
 
 				// get the operation type
-				zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+				zmqRecv(m_cryptoManager->getNodeSocket(), buf);
 				int32_t cryptoType = boost::lexical_cast<int32_t>(buf);
 
 				string target, msg, signature;
@@ -262,28 +264,28 @@ void Node::run()
 				{
 				case CMT_SIGN_RESPONSE:
 					// incoming message format: target (string), type (int32_t), msg (string), signature (string)
-					zmqRecv(m_cryptoThread->getNodeSocket(), target);
-					zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+					zmqRecv(m_cryptoManager->getNodeSocket(), target);
+					zmqRecv(m_cryptoManager->getNodeSocket(), buf);
 					type = boost::lexical_cast<int32_t>(buf);
-					zmqRecv(m_cryptoThread->getNodeSocket(), msg);
-					zmqRecv(m_cryptoThread->getNodeSocket(), signature);
+					zmqRecv(m_cryptoManager->getNodeSocket(), msg);
+					zmqRecv(m_cryptoManager->getNodeSocket(), signature);
 
 					onCryptoSign(target, type, msg, signature);
 					break;
 				case CMT_VERIFY_RESPONSE:
 					// outgoing message format: from (string), type (int32_t), msg (string), valid (bool)
-					zmqRecv(m_cryptoThread->getNodeSocket(), target);
-					zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+					zmqRecv(m_cryptoManager->getNodeSocket(), target);
+					zmqRecv(m_cryptoManager->getNodeSocket(), buf);
 					type = boost::lexical_cast<int32_t>(buf);
-					zmqRecv(m_cryptoThread->getNodeSocket(), msg);
-					zmqRecv(m_cryptoThread->getNodeSocket(), buf);
+					zmqRecv(m_cryptoManager->getNodeSocket(), msg);
+					zmqRecv(m_cryptoManager->getNodeSocket(), buf);
 					valid = boost::lexical_cast<bool>(buf);
 
 					onCryptoVerify(target, type, msg, valid);
 					break;
 				}
 
-				hasMore = zmqHasMessages(m_cryptoThread->getNodeSocket());
+				hasMore = zmqHasMessages(m_cryptoManager->getNodeSocket());
 			}
 		}
 
@@ -432,7 +434,7 @@ bool Node::send(const std::string& target, const int32_t type, const std::string
 
 	if (m_hasSigner)
 	{
-		m_cryptoThread->requestSign(target, type, msg);
+		m_cryptoManager->requestSign(target, type, msg);
 	}
 	else
 	{
@@ -532,7 +534,7 @@ void Node::processOnMessage(const std::string& from, const int32_t type, const s
 {
 	if (m_hasSigner)
 	{
-		m_cryptoThread->requestVerify(from, type, msg, signature);
+		m_cryptoManager->requestVerify(from, type, msg, signature);
 	}
 	else
 	{
@@ -551,7 +553,7 @@ void Node::setMessageSigner(IMessageSigner* messageSigner)
 	vector<IMessageSigner*> signers;
 	signers.push_back(messageSigner);
 
-	m_cryptoThread->setMessageSigners(signers);
+	m_cryptoManager->setMessageSigners(signers);
 	m_hasSigner = true;
 }
 
@@ -559,7 +561,7 @@ void Node::setMessageSigners(const std::vector<IMessageSigner*>& messageSigners)
 {
 	if (!messageSigners.empty())
 	{
-		m_cryptoThread->setMessageSigners(messageSigners);
+		m_cryptoManager->setMessageSigners(messageSigners);
 		m_hasSigner = true;
 	}
 	else
@@ -572,7 +574,7 @@ bool Node::getMessageSigners(std::vector<IMessageSigner*>& signers)
 {
 	if (m_hasSigner)
 	{
-		signers = m_cryptoThread->getMessageSigners();
+		signers = m_cryptoManager->getMessageSigners();
 		return true;
 	}
 	else

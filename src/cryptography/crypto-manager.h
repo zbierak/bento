@@ -1,33 +1,25 @@
 /*
- * CryptoThread.h
+ * CryptoManager.h
  *
  *  Created on: Jun 4, 2014
  *      Author: zbierak
  */
 
-#ifndef CRYPTOTHREAD_H_
-#define CRYPTOTHREAD_H_
+#ifndef CRYPTOMANAGER_H_
+#define CRYPTOMANAGER_H_
 
-#include <boost/thread.hpp>
 #include <vector>
 
-#include "zmq-wrappers/zmq-context.h"
-#include "zmq-wrappers/zmq-inproc.h"
-
-#include "message-signer.h"
-#include "topology/topology.h"
+#include "signing-thread.h"
+#include "crypto-job.h"
+#include "job-queue.h"
 
 namespace bento {
 
-enum CRYPTO_MSG_TYPE { CMT_SIGN_REQUEST, CMT_SIGN_RESPONSE, CMT_VERIFY_REQUEST, CMT_VERIFY_RESPONSE, CMT_END_OF_THE_WORLD };
-
-class CryptoJobQueue;
-class SigningThread;
-
-class CryptoThread {
+class CryptoManager {
 public:
-	CryptoThread(const Topology& topology);
-	virtual ~CryptoThread();
+	CryptoManager(const Topology& topology);
+	virtual ~CryptoManager();
 
 	void setMessageSigners(const std::vector<IMessageSigner*>& signers);
 	std::vector<IMessageSigner*> getMessageSigners();
@@ -46,10 +38,10 @@ private:
 
 	zmq::socket_t* m_chanAtNode;            // channel at the node thread
 
-	CryptoJobQueue* m_jobQueue;
+	JobQueue<CryptoJob>* m_jobQueue;
 	SigningThread** m_workers;
 };
 
 } /* namespace bento */
 
-#endif /* CRYPTOTHREAD_H_ */
+#endif /* CRYPTOMANAGER_H_ */

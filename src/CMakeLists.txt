@@ -1,9 +1,11 @@
 add_library(bento 
 	node.cpp
 	logger.cpp
-	crypto-thread.cpp
 	stats.cpp
 	version.cpp
+	cryptography/crypto-manager.cpp
+	cryptography/job-queue.cpp
+	cryptography/signing-thread.cpp
 	gather/gather-message-info.cpp
 	gather/gather-registry.cpp
 	services/topology-status.cpp
