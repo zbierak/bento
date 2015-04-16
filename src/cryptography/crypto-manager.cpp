@@ -46,7 +46,7 @@ CryptoManager::~CryptoManager()
 	{
 		CryptoJob* job = NULL;
 		if (m_incoming->pop(job))
-			free(job);
+			delete job;
 	}
 	delete m_incoming;
 
@@ -54,7 +54,7 @@ CryptoManager::~CryptoManager()
 	{
 		CryptoJob* job = NULL;
 		if (m_outgoing->pop(job))
-			free(job);
+			delete job;
 	}
 	delete m_outgoing;
 }
