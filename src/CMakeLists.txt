@@ -4,7 +4,6 @@ add_library(bento
 	stats.cpp
 	version.cpp
 	cryptography/crypto-manager.cpp
-	cryptography/job-queue.cpp
 	cryptography/signing-thread.cpp
 	gather/gather-message-info.cpp
 	gather/gather-registry.cpp

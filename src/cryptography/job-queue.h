@@ -20,12 +20,45 @@ template <typename T>
 class JobQueue
 {
 public:
-	JobQueue();
+	JobQueue()
+	{
+		do_abort = false;
+	}
 
-	void push(const T& value);
-	bool pop(T& value);
-	void abort();
-	bool empty() const;
+	void push(const T& value)
+	{
+		boost::mutex::scoped_lock lock(m);
+		q.push(value);
+		lock.unlock();
+		v.notify_one();
+	}
+
+	bool pop(T& value)
+	{
+		boost::mutex::scoped_lock lock(m);
+		while (q.empty())
+		{
+			if (do_abort) return false;
+			v.wait(lock);
+		}
+
+		value = q.front();
+		q.pop();
+		return true;
+	}
+
+	void abort()
+	{
+		boost::mutex::scoped_lock lock(m);
+		do_abort = true;
+		v.notify_all();
+	}
+
+	bool empty() const
+	{
+		boost::mutex::scoped_lock lock(m);
+		return q.empty();
+	}
 
 private:
 	std::queue<T> q;
