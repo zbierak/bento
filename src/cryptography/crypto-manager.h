@@ -38,7 +38,7 @@ private:
 
 	zmq::socket_t* m_chanAtNode;            // channel at the node thread
 
-	JobQueue<CryptoJob>* m_jobQueue;
+	JobQueue<CryptoJob*>* m_jobQueue;
 	SigningThread** m_workers;
 };
 
