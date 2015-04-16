@@ -242,9 +242,9 @@ void Node::run()
 		{
 			bool hasMore = true;
 
-			// this message (result of a crypto operation) has somewhat of higher priority and we take all of them
-			// otherwise the buffer might block, since we generate multiple sign/verify request per every other message
-			// processed in this function.
+			// Message on this channel notifies about response ready to be processed.
+			// We remove all messages from this channel and subsequently process all
+			// responses from the crypto manager.
 			while (hasMore)
 			{
 				string buf;
@@ -254,39 +254,31 @@ void Node::run()
 
 				// get the operation type
 				zmqRecv(m_cryptoManager->getNodeSocket(), buf);
-				int32_t cryptoType = boost::lexical_cast<int32_t>(buf);
-
-				string target, msg, signature;
-				int32_t type;
-				bool valid;
-
-				switch (cryptoType)
-				{
-				case CMT_SIGN_RESPONSE:
-					// incoming message format: target (string), type (int32_t), msg (string), signature (string)
-					zmqRecv(m_cryptoManager->getNodeSocket(), target);
-					zmqRecv(m_cryptoManager->getNodeSocket(), buf);
-					type = boost::lexical_cast<int32_t>(buf);
-					zmqRecv(m_cryptoManager->getNodeSocket(), msg);
-					zmqRecv(m_cryptoManager->getNodeSocket(), signature);
-
-					onCryptoSign(target, type, msg, signature);
-					break;
-				case CMT_VERIFY_RESPONSE:
-					// outgoing message format: from (string), type (int32_t), msg (string), valid (bool)
-					zmqRecv(m_cryptoManager->getNodeSocket(), target);
-					zmqRecv(m_cryptoManager->getNodeSocket(), buf);
-					type = boost::lexical_cast<int32_t>(buf);
-					zmqRecv(m_cryptoManager->getNodeSocket(), msg);
-					zmqRecv(m_cryptoManager->getNodeSocket(), buf);
-					valid = boost::lexical_cast<bool>(buf);
-
-					onCryptoVerify(target, type, msg, valid);
-					break;
-				}
 
 				hasMore = zmqHasMessages(m_cryptoManager->getNodeSocket());
 			}
+		}
+
+		// Check if any responses from cryptography thread are present
+		// (requires access to mutex, but I don't think we can run away from it anyways)
+		CryptoJob* cresp = m_cryptoManager->getResponse();
+		while (cresp != NULL)
+		{
+			if (cresp->jobType == CryptoJob::CJ_SIGN)
+			{
+				onCryptoSign(cresp->node, cresp->msgType, cresp->msg, cresp->signature);
+			}
+			else if (cresp->jobType == CryptoJob::CJ_VERIFY)
+			{
+				onCryptoVerify(cresp->node, cresp->msgType, cresp->msg, cresp->correct);
+			}
+			else
+			{
+				LOG_ERROR("Unexpected job crypto job type %d", cresp->jobType);
+			}
+
+			delete cresp;
+			cresp = m_cryptoManager->getResponse();
 		}
 
 		// process timers (if any) and estimate time to the next one

@@ -31,6 +31,9 @@ public:
 
 	void requestSign(const std::string& target, const int32_t type, const std::string& msg);                                  // can be called by the node thread only
 	void requestVerify(const std::string& from, const int32_t type, const std::string& msg, const std::string& signature);    // can be called by the node thread only
+
+	// returns a response from crypto thread (you have to delete it afterwards) or NULL if no responses currently waiting or no crypto threads are running
+	CryptoJob* getResponse();
 private:
 	std::vector<IMessageSigner*> m_signers;
 
@@ -38,7 +41,8 @@ private:
 
 	zmq::socket_t* m_chanAtNode;            // channel at the node thread
 
-	JobQueue<CryptoJob*>* m_jobQueue;
+	JobQueue<CryptoJob*>* m_incoming;
+	JobQueue<CryptoJob*>* m_outgoing;
 	SigningThread** m_workers;
 };
 

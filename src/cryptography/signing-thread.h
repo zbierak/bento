@@ -23,7 +23,7 @@ namespace bento {
 class SigningThread
 {
 public:
-	SigningThread(JobQueue<CryptoJob*>* queue, IMessageSigner* signer, const Topology& topology, const std::string& cryptoManagerSocketName);
+	SigningThread(JobQueue<CryptoJob*>* incomingQueue, JobQueue<CryptoJob*>* outgoingQueue, IMessageSigner* signer, const Topology& topology, const std::string& cryptoManagerSocketName);
 	~SigningThread();
 
 	void start();
@@ -33,7 +33,8 @@ public:
 private:
 	void run();
 
-	JobQueue<CryptoJob*>* m_queue;
+	JobQueue<CryptoJob*>* m_incoming;
+	JobQueue<CryptoJob*>* m_outgoing;
 	IMessageSigner* m_signer;
 
 	const Topology& m_topology;
