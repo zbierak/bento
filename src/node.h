@@ -9,6 +9,7 @@
 #define NODE_H_
 
 #include <map>
+#include <queue>
 #include <vector>
 #include <string>
 
@@ -110,8 +111,10 @@ private:
 	typedef std::vector<IMessageIntercepterPtr > InterceptersVector;
 	InterceptersVector m_intercepters;
 
-	typedef std::vector<boost::tuple<std::string, int32_t, std::string, std::string> > MessageBuffer;
+	typedef boost::tuple<std::string, int32_t, std::string, std::string> MessageContents;
+	typedef std::queue<MessageContents> MessageBuffer;
 	MessageBuffer m_unhandledMessages;
+	MessageBuffer m_unsentMessages;
 
 	boost::thread::id m_nodeThreadId;
 

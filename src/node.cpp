@@ -148,7 +148,7 @@ void Node::run()
 				if (m_sender == NULL)
 				{
 					// not yet connected, we need to buffer the message
-					m_unhandledMessages.push_back(boost::make_tuple(from, type, msg, signature));
+					m_unhandledMessages.push(boost::make_tuple(from, type, msg, signature));
 				}
 				else
 				{
@@ -284,6 +284,25 @@ void Node::run()
 		// process timers (if any) and estimate time to the next one
 		timeToNextEvent = m_timerManager.processReady();
 
+		// check if there are any messages that need to be sent
+		while (!m_unsentMessages.empty())
+		{
+			// attempt to send
+			MessageContents& it = m_unsentMessages.front();
+
+			if (m_sender->send(it.get<0>(), it.get<1>(), it.get<2>(), it.get<3>()))
+			{
+				// success, proceed to the next message
+				m_unsentMessages.pop();
+			}
+			else
+			{
+				// failure, try again later (make sure not to sleep for too long though)
+				timeToNextEvent = 0;
+				break;
+			}
+		}
+
 	}
 
 	LOG_DEBUG("Node %s is preparing to terminate", m_topology.getOwnerName().c_str());
@@ -291,7 +310,11 @@ void Node::run()
 
 void Node::onCryptoSign(const std::string& target, const int32_t type, const std::string& msg, const std::string& signature)
 {
-	m_sender->send(target, type, msg, signature);
+	if (!m_sender->send(target, type, msg, signature))
+	{
+		// unable to send message now due to channel congestion, try again later
+		m_unsentMessages.push(boost::make_tuple(target, type, msg, signature));
+	}
 }
 
 void Node::onCryptoVerify(const std::string& from, const int32_t type, const std::string& msg, bool success)
@@ -399,15 +422,12 @@ void Node::checkIfHasConnected()
 	// notify that the node is ready
 	this->onConnect();
 
-	if (!m_unhandledMessages.empty())
+	// handle buffered messages
+	while (!m_unhandledMessages.empty())
 	{
-		// handle buffered messages
-		for (MessageBuffer::const_iterator it = m_unhandledMessages.begin(); it != m_unhandledMessages.end(); ++it)
-		{
-			processOnMessage(it->get<0>(), it->get<1>(), it->get<2>(), it->get<3>());
-		}
-
-		m_unhandledMessages.clear();
+		MessageContents& it = m_unhandledMessages.front();
+		processOnMessage(it.get<0>(), it.get<1>(), it.get<2>(), it.get<3>());
+		m_unhandledMessages.pop();
 	}
 }
 

@@ -141,9 +141,9 @@ bool Sender::send(const std::string& target, const int32_t type, const std::stri
     string sType = boost::lexical_cast<string>(type);
 
     bool result = true;
-    result = zmqSend(it->second, sType, true) && result;
-    result = zmqSend(it->second, msg, true) && result;
-    result = zmqSend(it->second, signature, false) && result;
+    if (result) result = zmqSend(it->second, sType, true) && result;
+    if (result) result = zmqSend(it->second, msg, true) && result;
+    if (result) result = zmqSend(it->second, signature, false) && result;
 
     return result;
 }

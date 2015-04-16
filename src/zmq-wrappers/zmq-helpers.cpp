@@ -18,13 +18,13 @@ namespace bento
 	{
 		zmq::message_t m(msg.size());
 		memcpy(m.data(), msg.data(), msg.size());
-		return sock->send(m, more ? ZMQ_SNDMORE : 0);
+		return sock->send(m, more ? ZMQ_SNDMORE | ZMQ_DONTWAIT : ZMQ_DONTWAIT);
 	}
 
 	bool zmqSend(zmq::socket_t* sock, bool more)
 	{
 		zmq::message_t m(0);
-		return sock->send(m, more ? ZMQ_SNDMORE : 0);
+		return sock->send(m, more ? ZMQ_SNDMORE | ZMQ_DONTWAIT : ZMQ_DONTWAIT);
 	}
 
 	bool zmqSignalSend(zmq::socket_t* sock, const std::string& signal, bool more)
