@@ -578,7 +578,7 @@ void Node::setMessageSigners(const std::vector<IMessageSigner*>& messageSigners)
 	}
 	else
 	{
-		LOG_WARN("Attempting to set message signers with an empty list of signers.")
+		LOG_WARN("Attempting to set message signers with an empty list of signers.");
 	}
 }
 

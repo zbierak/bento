@@ -28,28 +28,28 @@ const char* loggerSanitizeFileName(const char*);
 
 #if LOG_LEVEL <= LOG_LEVEL_DEBUG
 #define LOG_DEBUG(format, ARG...) \
-	printf("[DEBUG] " format " [%s@%s:%d]\n", ##ARG, __func__, loggerSanitizeFileName(__FILE__), __LINE__);
+	do { printf("[DEBUG] " format " [%s@%s:%d]\n", ##ARG, __func__, loggerSanitizeFileName(__FILE__), __LINE__); } while(0)
 #else
 #define LOG_DEBUG(format, ARG...);
 #endif
 
 #if LOG_LEVEL <= LOG_LEVEL_INFO
 #define LOG_INFO(format, ARG...) \
-	printf("[INFO]  " format " [%s@%s:%d]\n", ##ARG, __func__, loggerSanitizeFileName(__FILE__), __LINE__);
+	do { printf("[INFO]  " format " [%s@%s:%d]\n", ##ARG, __func__, loggerSanitizeFileName(__FILE__), __LINE__); } while(0)
 #else
 #define LOG_INFO(format, ARG...);
 #endif
 
 #if LOG_LEVEL <= LOG_LEVEL_WARN
 #define LOG_WARN(format, ARG...) \
-	printf("[WARN]  " format " [%s@%s:%d]\n", ##ARG, __func__, loggerSanitizeFileName(__FILE__), __LINE__);
+	do { printf("[WARN]  " format " [%s@%s:%d]\n", ##ARG, __func__, loggerSanitizeFileName(__FILE__), __LINE__); } while(0)
 #else
 #define LOG_WARN(format, ARG...);
 #endif
 
 #if LOG_LEVEL <= LOG_LEVEL_ERROR
 #define LOG_ERROR(format, ARG...) \
-	printf("[ERROR] " format " [%s@%s:%d]\n", ##ARG, __func__, loggerSanitizeFileName(__FILE__), __LINE__);
+	do { printf("[ERROR] " format " [%s@%s:%d]\n", ##ARG, __func__, loggerSanitizeFileName(__FILE__), __LINE__); } while(0)
 #else
 #define LOG_ERROR(format, ARG...);
 #endif
